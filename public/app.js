@@ -15,6 +15,7 @@ const creditsLine = document.querySelector("#creditsLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
+const APP_VERSION = "20260905-credits2";
 
 const sampleMovies = [
   {
@@ -166,7 +167,7 @@ async function loadMovies() {
 }
 
 async function fetchMoviePayload() {
-  const staticResponse = await fetch(`data/movies-${CINEMA_ID}.json`, { cache: "no-store" });
+  const staticResponse = await fetch(`data/movies-${CINEMA_ID}.json?v=${APP_VERSION}`, { cache: "no-store" });
   if (staticResponse.ok) return staticResponse.json();
 
   const apiResponse = await fetch(`api/movies`);
