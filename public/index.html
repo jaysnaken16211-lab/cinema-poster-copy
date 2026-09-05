@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>電影簡介圖片卡</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">cinema.com.hk / cinemaID 5</p>
+          <h1>電影簡介圖片卡</h1>
+        </div>
+        <div class="controls">
+          <label>
+            戲院 ID
+            <input id="cinemaId" value="5" inputmode="numeric" />
+          </label>
+          <button id="refreshBtn">刷新電影</button>
+        </div>
+      </section>
+
+      <section class="layout">
+        <aside class="poster-panel">
+          <div class="panel-head">
+            <h2>點擊 Poster</h2>
+            <span id="countLabel">載入中</span>
+          </div>
+          <div id="posterGrid" class="poster-grid"></div>
+        </aside>
+
+        <section class="preview-panel">
+          <div class="panel-head">
+            <h2>圖片預覽</h2>
+            <div class="actions">
+              <button id="copyBtn">複製圖片</button>
+              <button id="downloadBtn">下載 PNG</button>
+            </div>
+          </div>
+
+          <article id="card" class="movie-card" aria-live="polite">
+            <div class="card-poster-wrap">
+              <img id="cardPoster" alt="" />
+            </div>
+            <div class="card-body">
+              <p id="cardMeta" class="meta"></p>
+              <h2 id="titleZh"></h2>
+              <p id="synopsisZh" class="synopsis"></p>
+              <div class="rule"></div>
+              <h3 id="titleEn"></h3>
+              <p id="synopsisEn" class="synopsis en"></p>
+              <p id="sourceLine" class="source-line"></p>
+            </div>
+          </article>
+          <p id="status" class="status">準備中...</p>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
