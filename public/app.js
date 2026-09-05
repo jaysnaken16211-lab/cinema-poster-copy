@@ -15,7 +15,7 @@ const creditsLine = document.querySelector("#creditsLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260905-credits2";
+const APP_VERSION = "20260905-credits3";
 
 const sampleMovies = [
   {
@@ -88,18 +88,11 @@ function buildMetaLines(movie) {
 }
 
 function buildCreditLines(movie) {
-  const director = [
-    movie.directorZh,
-    movie.directorEn && movie.directorEn !== movie.directorZh ? movie.directorEn : ""
-  ].filter(Boolean).join(" / ");
-  const cast = [
-    movie.castZh,
-    movie.castEn && movie.castEn !== movie.castZh ? movie.castEn : ""
-  ].filter(Boolean).join(" / ");
-
   return [
-    director ? `導演 Director: ${director}` : "",
-    cast ? `演員 Cast: ${cast}` : ""
+    movie.directorZh ? `導演：${movie.directorZh}` : "",
+    movie.castZh ? `演員：${movie.castZh}` : "",
+    movie.directorEn && movie.directorEn !== movie.directorZh ? `Director: ${movie.directorEn}` : "",
+    movie.castEn && movie.castEn !== movie.castZh ? `Cast: ${movie.castEn}` : ""
   ].filter(Boolean);
 }
 
@@ -300,7 +293,7 @@ function buildExportLayout(ctx, movie) {
     const metaAdvance = wrappedMetaLines.length * metaLineHeight * scale + 36 * scale;
 
     setCanvasFont(ctx, 700, sizes.credits);
-    const wrappedCreditLines = ellipsizeLines(creditLines.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 4);
+    const wrappedCreditLines = ellipsizeLines(creditLines.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 6);
     const creditAdvance = wrappedCreditLines.length ? 28 * scale + wrappedCreditLines.length * lineHeights.credits : 0;
 
     setCanvasFont(ctx, 800, sizes.titleZh);
@@ -411,7 +404,7 @@ async function makeCanvas() {
   if (layout.creditLines.length) {
     y += 28 * layout.scale;
     ctx.fillStyle = "#555555";
-    setCanvasFont(ctx, 700, layout.sizes.credits);
+    setCanvasFont(ctx, 600, layout.sizes.credits);
     drawLines(ctx, layout.creditLines, x, y, layout.lineHeights.credits);
   }
 
