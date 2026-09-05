@@ -1,6 +1,6 @@
 {
   "source": "https://www.cinema.com.hk/hk/cinema/5",
-  "fetchedAt": "2026-09-05T14:59:12.064Z",
+  "fetchedAt": "2026-09-05T15:16:15.957Z",
   "cinemaID": "5",
   "movies": [
     {
@@ -16,6 +16,10 @@
       "languageEn": "Cantonese,Mandarin",
       "subtitleZh": "中文,英文",
       "subtitleEn": "Chinese,English",
+      "directorZh": "黃浩然、鍾宏杰",
+      "directorEn": "Amos Wong, Frankie Chung",
+      "castZh": "盧鎮業、楊偲泳、梁雍婷、張紋嘉、彭秀慧",
+      "castEn": "Lo Chun Yip, Renci Yeung, Rachel Leung, Crystal Cheung, Kearen Pang",
       "posterFile": "programiu_2e4f5ebc-55e4-4f94-b734-d13c4a7879ed.jpg",
       "posterUrl": "data/posters/programiu_2e4f5ebc-55e4-4f94-b734-d13c4a7879ed.jpg",
       "firstShowTime": "2026-09-06T02:00:00.000Z"
@@ -33,6 +37,10 @@
       "languageEn": "Mandarin",
       "subtitleZh": "中文,英文",
       "subtitleEn": "Chinese,English",
+      "directorZh": "周星馳",
+      "directorEn": "Stephen Chow",
+      "castZh": "張小斐、迪麗熱巴、張藝興",
+      "castEn": "Zhang Xiaofei, Dilraba Dilmurat, Zhang Yixing",
       "posterFile": "programAu_b3463d8f-efb6-46b1-ac73-cbec0650bfe1.jpg",
       "posterUrl": "data/posters/programAu_b3463d8f-efb6-46b1-ac73-cbec0650bfe1.jpg",
       "firstShowTime": "2026-09-06T02:00:00.000Z"
@@ -50,6 +58,10 @@
       "languageEn": "English,Thai",
       "subtitleZh": "中文,英文",
       "subtitleEn": "Chinese,English",
+      "directorZh": "米高史派勒、彼得史派勒",
+      "directorEn": "Michael Spierig, Peter Spierig",
+      "castZh": "哈莉特斯萊特、亞希瑪湯瑪斯、湯姆布蘭妮",
+      "castEn": "Harriet Slater, Arsema Thomas, Tom Brittney",
       "posterFile": "programgx_fdbed780-b6a4-42d1-a58d-90ba32fe2a89.jpg",
       "posterUrl": "data/posters/programgx_fdbed780-b6a4-42d1-a58d-90ba32fe2a89.jpg",
       "firstShowTime": "2026-09-06T02:05:00.000Z"
@@ -67,6 +79,10 @@
       "languageEn": "English",
       "subtitleZh": "中文",
       "subtitleEn": "Chinese",
+      "directorZh": "基斯杜化路蘭",
+      "directorEn": "Christopher Nolan",
+      "castZh": "麥迪文、湯姆賀倫、安妮夏菲慧、羅拔柏迪臣、雷碧達尼安高、辛蒂雅、查理絲花朗",
+      "castEn": "Matt Damon, Tom Holland, Anne Hathaway, Robert Pattinson, Lupita Nyong'o, Zendaya, Charlize Theron",
       "posterFile": "programYs_0f3cfa2f-02d1-48b7-b512-2d6ce57fad1a.jpg",
       "posterUrl": "data/posters/programYs_0f3cfa2f-02d1-48b7-b512-2d6ce57fad1a.jpg",
       "firstShowTime": "2026-09-06T02:25:00.000Z"
@@ -84,6 +100,10 @@
       "languageEn": "English",
       "subtitleZh": "中文",
       "subtitleEn": "Chinese",
+      "directorZh": "安德魯史坦頓",
+      "directorEn": "Andrew Stanton",
+      "castZh": "聲演：湯漢斯、添亞倫、鍾古錫、Greta Lee、高倫奧拜恩",
+      "castEn": "Voice Cast: Tom Hanks, Tim Allen, Joan Cusack, Greta Lee, Conan O’Brien",
       "posterFile": "programZm_e9dc99a7-dc18-4300-887e-b09d76760a82.jpg",
       "posterUrl": "data/posters/programZm_e9dc99a7-dc18-4300-887e-b09d76760a82.jpg",
       "firstShowTime": "2026-09-06T04:00:00.000Z"
@@ -101,6 +121,10 @@
       "languageEn": "English,Spanish",
       "subtitleZh": "中文",
       "subtitleEn": "Chinese",
+      "directorZh": "奧莉菲亞懷特",
+      "directorEn": "Olivia Wilde",
+      "castZh": "薛夫洛根、奧莉菲亞懷特、彭妮露古絲、愛德華諾頓",
+      "castEn": "Seth Rogen, Olivia Wilde, Penélope Cruz, Edward Norton",
       "posterFile": "programCu_70031bb9-db7e-4499-a1f9-18612d30f90d.jpg",
       "posterUrl": "data/posters/programCu_70031bb9-db7e-4499-a1f9-18612d30f90d.jpg",
       "firstShowTime": "2026-09-06T04:00:00.000Z"
@@ -118,6 +142,10 @@
       "languageEn": "Japanese",
       "subtitleZh": "中文,英文",
       "subtitleEn": "Chinese,English",
+      "directorZh": "及川啓",
+      "directorEn": "Kei Oikawa",
+      "castZh": "聲演：青木遙、田中誠人、小澤亞李、井口裕香、淺井孝行、內田雄馬",
+      "castEn": "Voice Cast: Haruka Aoki, Makoto Tanaka, Ari Ozawa, Yuka Iguchi, Takayuki Asai, Yuma Uchida",
       "posterFile": "programIs_8751b2cb-1f44-433e-82a6-593a1946e0b8.png",
       "posterUrl": "data/posters/programIs_8751b2cb-1f44-433e-82a6-593a1946e0b8.png",
       "firstShowTime": "2026-09-06T04:00:00.000Z"
@@ -135,6 +163,10 @@
       "languageEn": "Japanese",
       "subtitleZh": "中文,英文",
       "subtitleEn": "Chinese,English",
+      "directorZh": "三木孝浩",
+      "directorEn": "Takahiro Miki",
+      "castZh": "道枝駿佑、生見愛瑠、井上想良、田邊桃子、竹原Pistol、岡田浩暉、五頭岳夫、野間口徹、新羅慎二、宮崎美子、萩原聖人",
+      "castEn": "Shunsuke Michieda, Meru Nukumi, Sora Inoue, Momoko Tanabe, Pistol Takehara, Kohki Okada, Takeo Gozu, Toru Nomaguchi, Shinji Nira, Yoshiko Miyazaki, Masato Hagiwara",
       "posterFile": "programQx_e108998b-f78e-4f19-8c65-2952d18c81d5.jpg",
       "posterUrl": "data/posters/programQx_e108998b-f78e-4f19-8c65-2952d18c81d5.jpg",
       "firstShowTime": "2026-09-06T04:50:00.000Z"
@@ -152,6 +184,10 @@
       "languageEn": "English",
       "subtitleZh": "中文",
       "subtitleEn": "Chinese",
+      "directorZh": "德斯汀丹尼爾克雷頓",
+      "directorEn": "Destin Daniel Cretton",
+      "castZh": "湯賀蘭、辛蒂雅、莎蒂辛克、積及巴特朗、莊柏恩瑟、崔梅爾提爾曼、麥可曼多、麥克雷法路",
+      "castEn": "Tom Holland, Zendaya, Sadie Sink, Jacob Batalon, Jon Bernthal, Tramell Tillman, Michael Mando, Mark Ruffalo",
       "posterFile": "programmu_50ad9ba9-b980-4ccc-aa2e-85bbc9f9e657.jpg",
       "posterUrl": "data/posters/programmu_50ad9ba9-b980-4ccc-aa2e-85bbc9f9e657.jpg",
       "firstShowTime": "2026-09-06T05:55:00.000Z"
@@ -169,6 +205,10 @@
       "languageEn": "Japanese",
       "subtitleZh": "中文,英文",
       "subtitleEn": "Chinese,English",
+      "directorZh": "中野量太",
+      "directorEn": "Ryota Nakano",
+      "castZh": "柴崎幸、小田切讓、滿島光、青山姬乃、味元耀大",
+      "castEn": "Ko Shibasaki, Joe Odagiri, Hikari Mitsushima, Aoyama Himeno, Yota Mimoto",
       "posterFile": "programYu_9702e05b-7ed5-44e0-9545-9e4e81c95f86.jpg",
       "posterUrl": "data/posters/programYu_9702e05b-7ed5-44e0-9545-9e4e81c95f86.jpg",
       "firstShowTime": "2026-09-06T09:05:00.000Z"
@@ -186,6 +226,10 @@
       "languageEn": "Mandarin,English,Arabic",
       "subtitleZh": "中文,英文",
       "subtitleEn": "Chinese,English",
+      "directorZh": "文牧野",
+      "directorEn": "Wen Muye",
+      "castZh": "沈騰、蔣奇明、奧馬爾 謝里夫、李治廷、謝里夫 薩比",
+      "castEn": "Shen Teng, Jiang Qiming, Omar Sherif, Aarif Rahman, Sherif Sobhy",
       "posterFile": "programpy_169d45b9-de0d-44ed-a5ba-f30f3364140b.jpg",
       "posterUrl": "data/posters/programpy_169d45b9-de0d-44ed-a5ba-f30f3364140b.jpg",
       "firstShowTime": "2026-09-08T02:45:00.000Z"
@@ -203,6 +247,10 @@
       "languageEn": "",
       "subtitleZh": "英文",
       "subtitleEn": "English",
+      "directorZh": "",
+      "directorEn": "",
+      "castZh": "Queen",
+      "castEn": "Queen",
       "posterFile": "programHx_bdb635d6-8685-435b-94dd-ea572cea3367.jpg",
       "posterUrl": "data/posters/programHx_bdb635d6-8685-435b-94dd-ea572cea3367.jpg",
       "firstShowTime": "2026-10-07T11:45:00.000Z"

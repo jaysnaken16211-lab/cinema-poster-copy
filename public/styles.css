@@ -253,6 +253,15 @@ input {
   line-height: 1.55;
 }
 
+.credits-line {
+  color: #555;
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 18px 0 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
 .rule {
   height: 1px;
   background: var(--line);

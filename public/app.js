@@ -11,6 +11,7 @@ const titleZh = document.querySelector("#titleZh");
 const synopsisZh = document.querySelector("#synopsisZh");
 const titleEn = document.querySelector("#titleEn");
 const synopsisEn = document.querySelector("#synopsisEn");
+const creditsLine = document.querySelector("#creditsLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
@@ -29,6 +30,10 @@ const sampleMovies = [
     languageEn: "Cantonese",
     subtitleZh: "中英文",
     subtitleEn: "Chinese, English",
+    directorZh: "陸劍青、梁樂民",
+    directorEn: "Longman Leung, Sunny Luk",
+    castZh: "梁家輝、郭富城、周潤發",
+    castEn: "Tony Leung Ka-fai, Aaron Kwok, Chow Yun-fat",
     posterUrl: "api/poster?title=%E5%AF%92%E6%88%B0%201994"
   },
   {
@@ -44,6 +49,10 @@ const sampleMovies = [
     languageEn: "French, English",
     subtitleZh: "英文",
     subtitleEn: "English",
+    directorZh: "範例導演",
+    directorEn: "Sample Director",
+    castZh: "範例演員",
+    castEn: "Sample Cast",
     posterUrl: "api/poster?title=Murder%20in%20the%20Building"
   }
 ];
@@ -77,6 +86,22 @@ function buildMetaLines(movie) {
   ].filter(Boolean);
 }
 
+function buildCreditLines(movie) {
+  const director = [
+    movie.directorZh,
+    movie.directorEn && movie.directorEn !== movie.directorZh ? movie.directorEn : ""
+  ].filter(Boolean).join(" / ");
+  const cast = [
+    movie.castZh,
+    movie.castEn && movie.castEn !== movie.castZh ? movie.castEn : ""
+  ].filter(Boolean).join(" / ");
+
+  return [
+    director ? `導演 Director: ${director}` : "",
+    cast ? `演員 Cast: ${cast}` : ""
+  ].filter(Boolean);
+}
+
 function selectMovie(movie) {
   selectedMovie = movie;
   cardPoster.src = movie.posterUrl;
@@ -86,6 +111,9 @@ function selectMovie(movie) {
   synopsisZh.textContent = movie.synopsisZh || "暫時未有中文故事簡介。";
   titleEn.textContent = movie.titleEn;
   synopsisEn.textContent = movie.synopsisEn || "English synopsis is not available yet.";
+  const creditLines = buildCreditLines(movie);
+  creditsLine.textContent = creditLines.join("\n");
+  creditsLine.hidden = creditLines.length === 0;
   sourceLine.textContent = "Source: cinema.com.hk";
 
   document.querySelectorAll(".poster-button").forEach((button) => {
@@ -244,6 +272,8 @@ function buildExportLayout(ctx, movie) {
   const bottom = 1830;
   const metaLines = buildMetaLines(movie);
   const metaLineHeight = 34;
+  const creditLines = buildCreditLines(movie);
+  const creditLineHeight = 33;
   const synopsisZh = movie.synopsisZh || "暫時未有中文故事簡介。";
   const synopsisEn = movie.synopsisEn || "English synopsis is not available yet.";
 
@@ -253,18 +283,24 @@ function buildExportLayout(ctx, movie) {
       titleZh: 56 * scale,
       synopsisZh: 32 * scale,
       titleEn: 38 * scale,
-      synopsisEn: 28 * scale
+      synopsisEn: 28 * scale,
+      credits: 24 * scale
     };
     const lineHeights = {
       titleZh: 64 * scale,
       synopsisZh: 50 * scale,
       titleEn: 46 * scale,
-      synopsisEn: 40 * scale
+      synopsisEn: 40 * scale,
+      credits: creditLineHeight * scale
     };
 
     setCanvasFont(ctx, 700, sizes.meta);
     const wrappedMetaLines = metaLines.flatMap((line) => getWrappedLines(ctx, line, maxWidth));
     const metaAdvance = wrappedMetaLines.length * metaLineHeight * scale + 36 * scale;
+
+    setCanvasFont(ctx, 700, sizes.credits);
+    const wrappedCreditLines = ellipsizeLines(creditLines.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 4);
+    const creditAdvance = wrappedCreditLines.length ? 28 * scale + wrappedCreditLines.length * lineHeights.credits : 0;
 
     setCanvasFont(ctx, 800, sizes.titleZh);
     const titleZhLines = ellipsizeLines(getWrappedLines(ctx, movie.titleZh, maxWidth), 2);
@@ -286,7 +322,8 @@ function buildExportLayout(ctx, movie) {
         38 * scale +
         58 * scale +
         titleEnLines.length * lineHeights.titleEn +
-        20 * scale;
+        20 * scale +
+        creditAdvance;
       const remaining = Math.max(0, bottom - 830 - fixedHeight);
       const zhWanted = synopsisZhLines.length * lineHeights.synopsisZh;
       const enWanted = synopsisEnLines.length * lineHeights.synopsisEn;
@@ -306,9 +343,10 @@ function buildExportLayout(ctx, movie) {
       58 * scale +
       titleEnLines.length * lineHeights.titleEn +
       20 * scale +
-      synopsisEnLines.length * lineHeights.synopsisEn;
+      synopsisEnLines.length * lineHeights.synopsisEn +
+      creditAdvance;
 
-    return { scale, sizes, lineHeights, metaLines: wrappedMetaLines, metaLineHeight, titleZhLines, synopsisZhLines, titleEnLines, synopsisEnLines, height };
+    return { scale, sizes, lineHeights, metaLines: wrappedMetaLines, metaLineHeight, titleZhLines, synopsisZhLines, titleEnLines, synopsisEnLines, creditLines: wrappedCreditLines, height };
   }
 
   for (let scale = 1; scale >= 0.68; scale -= 0.04) {
@@ -368,6 +406,13 @@ async function makeCanvas() {
   setCanvasFont(ctx, 400, layout.sizes.synopsisEn);
   ctx.fillStyle = "#333333";
   y = drawLines(ctx, layout.synopsisEnLines, x, y, layout.lineHeights.synopsisEn);
+
+  if (layout.creditLines.length) {
+    y += 28 * layout.scale;
+    ctx.fillStyle = "#555555";
+    setCanvasFont(ctx, 700, layout.sizes.credits);
+    drawLines(ctx, layout.creditLines, x, y, layout.lineHeights.credits);
+  }
 
   ctx.fillStyle = "#777";
   setCanvasFont(ctx, 400, 22);
