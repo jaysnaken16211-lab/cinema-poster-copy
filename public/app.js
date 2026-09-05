@@ -1,6 +1,5 @@
 const posterGrid = document.querySelector("#posterGrid");
 const countLabel = document.querySelector("#countLabel");
-const cinemaIdInput = document.querySelector("#cinemaId");
 const refreshBtn = document.querySelector("#refreshBtn");
 const copyBtn = document.querySelector("#copyBtn");
 const downloadBtn = document.querySelector("#downloadBtn");
@@ -13,6 +12,8 @@ const synopsisZh = document.querySelector("#synopsisZh");
 const titleEn = document.querySelector("#titleEn");
 const synopsisEn = document.querySelector("#synopsisEn");
 const sourceLine = document.querySelector("#sourceLine");
+
+const CINEMA_ID = "5";
 
 const sampleMovies = [
   {
@@ -71,10 +72,8 @@ function buildMetaLines(movie) {
 
   return [
     [movie.category, movie.duration, movie.openingDate].filter(Boolean).join("  ·  "),
-    [
-      language ? `語言 Language: ${language}` : "",
-      subtitle ? `字幕 Subtitles: ${subtitle}` : ""
-    ].filter(Boolean).join("  ·  ")
+    language ? `語言 Language: ${language}` : "",
+    subtitle ? `字幕 Subtitles: ${subtitle}` : ""
   ].filter(Boolean);
 }
 
@@ -121,12 +120,11 @@ function renderMovies(list) {
 }
 
 async function loadMovies() {
-  const cinemaID = cinemaIdInput.value.trim() || "5";
   setStatus("正在讀取電影資料...");
   refreshBtn.disabled = true;
 
   try {
-    const payload = await fetchMoviePayload(cinemaID);
+    const payload = await fetchMoviePayload();
     movies = payload.movies?.length ? payload.movies : sampleMovies;
     renderMovies(movies);
     setStatus(payload.movies?.length ? `已更新：${new Date(payload.fetchedAt).toLocaleString()}` : "未讀到即時資料，已顯示 sample。");
@@ -139,11 +137,11 @@ async function loadMovies() {
   }
 }
 
-async function fetchMoviePayload(cinemaID) {
-  const staticResponse = await fetch(`data/movies-${encodeURIComponent(cinemaID)}.json`, { cache: "no-store" });
+async function fetchMoviePayload() {
+  const staticResponse = await fetch(`data/movies-${CINEMA_ID}.json`, { cache: "no-store" });
   if (staticResponse.ok) return staticResponse.json();
 
-  const apiResponse = await fetch(`api/movies?cinemaID=${encodeURIComponent(cinemaID)}`);
+  const apiResponse = await fetch(`api/movies`);
   const payload = await apiResponse.json();
   if (!apiResponse.ok) throw new Error(payload.error || "讀取失敗");
   return payload;
@@ -163,7 +161,7 @@ function drawContain(ctx, img, x, y, width, height) {
   const scale = Math.min(width / img.width, height / img.height);
   const drawW = img.width * scale;
   const drawH = img.height * scale;
-  ctx.fillStyle = "#111";
+  ctx.fillStyle = "#fff";
   ctx.fillRect(x, y, width, height);
   ctx.drawImage(img, x + (width - drawW) / 2, y + (height - drawH) / 2, drawW, drawH);
 }
@@ -246,7 +244,6 @@ function buildExportLayout(ctx, movie) {
   const bottom = 1830;
   const metaLines = buildMetaLines(movie);
   const metaLineHeight = 34;
-  const metaAdvance = metaLines.length * metaLineHeight + 36;
   const synopsisZh = movie.synopsisZh || "暫時未有中文故事簡介。";
   const synopsisEn = movie.synopsisEn || "English synopsis is not available yet.";
 
@@ -265,6 +262,10 @@ function buildExportLayout(ctx, movie) {
       synopsisEn: 40 * scale
     };
 
+    setCanvasFont(ctx, 700, sizes.meta);
+    const wrappedMetaLines = metaLines.flatMap((line) => getWrappedLines(ctx, line, maxWidth));
+    const metaAdvance = wrappedMetaLines.length * metaLineHeight * scale + 36 * scale;
+
     setCanvasFont(ctx, 800, sizes.titleZh);
     const titleZhLines = ellipsizeLines(getWrappedLines(ctx, movie.titleZh, maxWidth), 2);
 
@@ -279,7 +280,7 @@ function buildExportLayout(ctx, movie) {
 
     if (clamp) {
       const fixedHeight =
-        metaAdvance * scale +
+        metaAdvance +
         titleZhLines.length * lineHeights.titleZh +
         22 * scale +
         38 * scale +
@@ -297,7 +298,7 @@ function buildExportLayout(ctx, movie) {
     }
 
     const height =
-      metaAdvance * scale +
+      metaAdvance +
       titleZhLines.length * lineHeights.titleZh +
       22 * scale +
       synopsisZhLines.length * lineHeights.synopsisZh +
@@ -307,7 +308,7 @@ function buildExportLayout(ctx, movie) {
       20 * scale +
       synopsisEnLines.length * lineHeights.synopsisEn;
 
-    return { scale, sizes, lineHeights, metaLines, metaLineHeight, titleZhLines, synopsisZhLines, titleEnLines, synopsisEnLines, height };
+    return { scale, sizes, lineHeights, metaLines: wrappedMetaLines, metaLineHeight, titleZhLines, synopsisZhLines, titleEnLines, synopsisEnLines, height };
   }
 
   for (let scale = 1; scale >= 0.68; scale -= 0.04) {

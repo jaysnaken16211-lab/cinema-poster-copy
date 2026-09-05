@@ -7,6 +7,7 @@ import { fetchCinemaMovies, POSTER_CDN } from "./lib/cinema-data.js";
 const root = fileURLToPath(new URL(".", import.meta.url));
 const publicDir = join(root, "public");
 const port = process.env.PORT || 4173;
+const CINEMA_ID = "5";
 
 const mime = {
   ".html": "text/html; charset=utf-8",
@@ -31,13 +32,12 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-async function fetchMovies(searchParams) {
-  const cinemaID = searchParams.get("cinemaID") || "5";
-  const cacheKey = `${cinemaID}:live`;
+async function fetchMovies() {
+  const cacheKey = `${CINEMA_ID}:live`;
   const cached = movieCache.get(cacheKey);
   if (cached && Date.now() - cached.time < 10 * 60 * 1000) return cached.movies;
 
-  const movies = await fetchCinemaMovies({ cinemaID, posterPath: "api" });
+  const movies = await fetchCinemaMovies({ cinemaID: CINEMA_ID, posterPath: "api" });
   movieCache.set(cacheKey, { time: Date.now(), movies });
   return movies;
 }
@@ -121,9 +121,10 @@ createServer(async (req, res) => {
   const url = new URL(req.url || "/", `http://${req.headers.host}`);
   try {
     if (url.pathname === "/api/movies") {
-      const movies = await fetchMovies(url.searchParams);
+      const movies = await fetchMovies();
       json(res, 200, {
-        source: "https://www.cinema.com.hk/hk/cinema",
+        source: `https://www.cinema.com.hk/hk/cinema/${CINEMA_ID}`,
+        cinemaID: CINEMA_ID,
         fetchedAt: new Date().toISOString(),
         movies
       });

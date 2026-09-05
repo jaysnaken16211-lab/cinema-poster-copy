@@ -203,7 +203,7 @@ input {
 
 .card-poster-wrap {
   height: 520px;
-  background: #111;
+  background: #fff;
   overflow: hidden;
 }
 
@@ -211,7 +211,7 @@ input {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .card-body {
@@ -225,6 +225,7 @@ input {
   line-height: 1.45;
   margin-bottom: 20px;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .movie-card h2 {
