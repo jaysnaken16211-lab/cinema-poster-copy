@@ -11,11 +11,12 @@ const titleZh = document.querySelector("#titleZh");
 const synopsisZh = document.querySelector("#synopsisZh");
 const titleEn = document.querySelector("#titleEn");
 const synopsisEn = document.querySelector("#synopsisEn");
-const creditsLine = document.querySelector("#creditsLine");
+const creditsZhLine = document.querySelector("#creditsZhLine");
+const creditsEnLine = document.querySelector("#creditsEnLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260905-credits3";
+const APP_VERSION = "20260905-credits4";
 
 const sampleMovies = [
   {
@@ -87,13 +88,17 @@ function buildMetaLines(movie) {
   ].filter(Boolean);
 }
 
-function buildCreditLines(movie) {
-  return [
-    movie.directorZh ? `導演：${movie.directorZh}` : "",
-    movie.castZh ? `演員：${movie.castZh}` : "",
-    movie.directorEn && movie.directorEn !== movie.directorZh ? `Director: ${movie.directorEn}` : "",
-    movie.castEn && movie.castEn !== movie.castZh ? `Cast: ${movie.castEn}` : ""
-  ].filter(Boolean);
+function buildCreditSections(movie) {
+  return {
+    zh: [
+      movie.directorZh ? `導演：${movie.directorZh}` : "",
+      movie.castZh ? `演員：${movie.castZh}` : ""
+    ].filter(Boolean),
+    en: [
+      movie.directorEn && movie.directorEn !== movie.directorZh ? `Director: ${movie.directorEn}` : "",
+      movie.castEn && movie.castEn !== movie.castZh ? `Cast: ${movie.castEn}` : ""
+    ].filter(Boolean)
+  };
 }
 
 function selectMovie(movie) {
@@ -105,9 +110,11 @@ function selectMovie(movie) {
   synopsisZh.textContent = movie.synopsisZh || "暫時未有中文故事簡介。";
   titleEn.textContent = movie.titleEn;
   synopsisEn.textContent = movie.synopsisEn || "English synopsis is not available yet.";
-  const creditLines = buildCreditLines(movie);
-  creditsLine.textContent = creditLines.join("\n");
-  creditsLine.hidden = creditLines.length === 0;
+  const creditSections = buildCreditSections(movie);
+  creditsZhLine.textContent = creditSections.zh.join("\n");
+  creditsZhLine.hidden = creditSections.zh.length === 0;
+  creditsEnLine.textContent = creditSections.en.join("\n");
+  creditsEnLine.hidden = creditSections.en.length === 0;
   sourceLine.textContent = "Source: cinema.com.hk";
 
   document.querySelectorAll(".poster-button").forEach((button) => {
@@ -266,7 +273,7 @@ function buildExportLayout(ctx, movie) {
   const bottom = 1830;
   const metaLines = buildMetaLines(movie);
   const metaLineHeight = 34;
-  const creditLines = buildCreditLines(movie);
+  const creditSections = buildCreditSections(movie);
   const creditLineHeight = 33;
   const synopsisZh = movie.synopsisZh || "暫時未有中文故事簡介。";
   const synopsisEn = movie.synopsisEn || "English synopsis is not available yet.";
@@ -293,8 +300,10 @@ function buildExportLayout(ctx, movie) {
     const metaAdvance = wrappedMetaLines.length * metaLineHeight * scale + 36 * scale;
 
     setCanvasFont(ctx, 700, sizes.credits);
-    const wrappedCreditLines = ellipsizeLines(creditLines.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 6);
-    const creditAdvance = wrappedCreditLines.length ? 28 * scale + wrappedCreditLines.length * lineHeights.credits : 0;
+    const wrappedZhCreditLines = ellipsizeLines(creditSections.zh.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 3);
+    const wrappedEnCreditLines = ellipsizeLines(creditSections.en.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 3);
+    const zhCreditAdvance = wrappedZhCreditLines.length ? 24 * scale + wrappedZhCreditLines.length * lineHeights.credits : 0;
+    const enCreditAdvance = wrappedEnCreditLines.length ? 24 * scale + wrappedEnCreditLines.length * lineHeights.credits : 0;
 
     setCanvasFont(ctx, 800, sizes.titleZh);
     const titleZhLines = ellipsizeLines(getWrappedLines(ctx, movie.titleZh, maxWidth), 2);
@@ -317,7 +326,8 @@ function buildExportLayout(ctx, movie) {
         58 * scale +
         titleEnLines.length * lineHeights.titleEn +
         20 * scale +
-        creditAdvance;
+        zhCreditAdvance +
+        enCreditAdvance;
       const remaining = Math.max(0, bottom - 830 - fixedHeight);
       const zhWanted = synopsisZhLines.length * lineHeights.synopsisZh;
       const enWanted = synopsisEnLines.length * lineHeights.synopsisEn;
@@ -333,14 +343,28 @@ function buildExportLayout(ctx, movie) {
       titleZhLines.length * lineHeights.titleZh +
       22 * scale +
       synopsisZhLines.length * lineHeights.synopsisZh +
+      zhCreditAdvance +
       38 * scale +
       58 * scale +
       titleEnLines.length * lineHeights.titleEn +
       20 * scale +
       synopsisEnLines.length * lineHeights.synopsisEn +
-      creditAdvance;
+      enCreditAdvance;
 
-    return { scale, sizes, lineHeights, metaLines: wrappedMetaLines, metaLineHeight, titleZhLines, synopsisZhLines, titleEnLines, synopsisEnLines, creditLines: wrappedCreditLines, height };
+    return {
+      scale,
+      sizes,
+      lineHeights,
+      metaLines: wrappedMetaLines,
+      metaLineHeight,
+      titleZhLines,
+      synopsisZhLines,
+      zhCreditLines: wrappedZhCreditLines,
+      titleEnLines,
+      synopsisEnLines,
+      enCreditLines: wrappedEnCreditLines,
+      height
+    };
   }
 
   for (let scale = 1; scale >= 0.68; scale -= 0.04) {
@@ -383,7 +407,16 @@ async function makeCanvas() {
 
   setCanvasFont(ctx, 400, layout.sizes.synopsisZh);
   ctx.fillStyle = "#2b2b2b";
-  y = drawLines(ctx, layout.synopsisZhLines, x, y, layout.lineHeights.synopsisZh) + 38 * layout.scale;
+  y = drawLines(ctx, layout.synopsisZhLines, x, y, layout.lineHeights.synopsisZh);
+
+  if (layout.zhCreditLines.length) {
+    y += 24 * layout.scale;
+    ctx.fillStyle = "#555555";
+    setCanvasFont(ctx, 600, layout.sizes.credits);
+    y = drawLines(ctx, layout.zhCreditLines, x, y, layout.lineHeights.credits);
+  }
+
+  y += 38 * layout.scale;
 
   ctx.strokeStyle = "#ded9d2";
   ctx.lineWidth = 3;
@@ -401,11 +434,11 @@ async function makeCanvas() {
   ctx.fillStyle = "#333333";
   y = drawLines(ctx, layout.synopsisEnLines, x, y, layout.lineHeights.synopsisEn);
 
-  if (layout.creditLines.length) {
-    y += 28 * layout.scale;
+  if (layout.enCreditLines.length) {
+    y += 24 * layout.scale;
     ctx.fillStyle = "#555555";
     setCanvasFont(ctx, 600, layout.sizes.credits);
-    drawLines(ctx, layout.creditLines, x, y, layout.lineHeights.credits);
+    drawLines(ctx, layout.enCreditLines, x, y, layout.lineHeights.credits);
   }
 
   ctx.fillStyle = "#777";

@@ -263,6 +263,10 @@ input {
   overflow-wrap: anywhere;
 }
 
+.credits-line.en {
+  margin-top: 16px;
+}
+
 .rule {
   height: 1px;
   background: var(--line);
