@@ -21,7 +21,10 @@ const creditsEnLine = document.querySelector("#creditsEnLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-password2";
+const APP_VERSION = "20260907-hires1";
+const CARD_WIDTH = 1080;
+const CARD_HEIGHT = 1920;
+const EXPORT_SCALE = 2;
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
 
 const sampleMovies = [
@@ -423,20 +426,21 @@ async function makeCanvas() {
   if (!selectedMovie) throw new Error("未揀電影");
 
   const canvas = document.createElement("canvas");
-  canvas.width = 1080;
-  canvas.height = 1920;
+  canvas.width = CARD_WIDTH * EXPORT_SCALE;
+  canvas.height = CARD_HEIGHT * EXPORT_SCALE;
   const ctx = canvas.getContext("2d");
+  ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
   const layout = buildExportLayout(ctx, selectedMovie);
   const img = await loadImage(selectedMovie.posterUrl);
 
   ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawContain(ctx, img, 0, 0, 1080, 760);
+  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  drawContain(ctx, img, 0, 0, CARD_WIDTH, 760);
 
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 760, 1080, 1160);
+  ctx.fillRect(0, 760, CARD_WIDTH, 1160);
   ctx.fillStyle = "#b82435";
-  ctx.fillRect(0, 760, 1080, 12);
+  ctx.fillRect(0, 760, CARD_WIDTH, 12);
 
   const x = 74;
   let y = 830;
