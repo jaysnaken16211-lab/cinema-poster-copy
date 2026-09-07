@@ -20,7 +20,7 @@ const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-storyonly1";
+const APP_VERSION = "20260907-storyonly2";
 const EXPORT_WIDTH = 1080;
 const EXPORT_HEIGHT = 1920;
 const AUTH_KEY = "cinemaCardAuthorized";
