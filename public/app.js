@@ -31,9 +31,11 @@ const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-a4print1";
-const EXPORT_WIDTH = 2480;
-const EXPORT_HEIGHT = 3508;
+const APP_VERSION = "20260907-mixedsize1";
+const STORY_EXPORT_WIDTH = 1080;
+const STORY_EXPORT_HEIGHT = 1920;
+const PAUSE_EXPORT_WIDTH = 2480;
+const PAUSE_EXPORT_HEIGHT = 3508;
 const AUTH_KEY = "cinemaCardAuthorized";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
 const PAUSE_HIGHLIGHT_COLORS = {
@@ -771,7 +773,7 @@ function getPauseNoticeLayout(ctx, message, baseColor, posterCount) {
   const minPosterHeight = posterCount <= 4 ? 1180 : 900;
   const bottomMargin = 140;
   const boxPosterGap = 110;
-  const maxBoxHeight = EXPORT_HEIGHT - box.y - boxPosterGap - minPosterHeight - bottomMargin;
+  const maxBoxHeight = PAUSE_EXPORT_HEIGHT - box.y - boxPosterGap - minPosterHeight - bottomMargin;
   const size = 104;
   const lineHeight = size * 1.28;
 
@@ -787,7 +789,7 @@ function getPauseNoticeLayout(ctx, message, baseColor, posterCount) {
   return {
     box: { ...box, height: boxHeight },
     text: { size, lineHeight, lines, textHeight, centerY: box.y + boxHeight / 2 },
-    posterArea: { x: 170, y: posterAreaY, width: EXPORT_WIDTH - 340, height: EXPORT_HEIGHT - posterAreaY - bottomMargin }
+    posterArea: { x: 170, y: posterAreaY, width: PAUSE_EXPORT_WIDTH - 340, height: PAUSE_EXPORT_HEIGHT - posterAreaY - bottomMargin }
   };
 }
 
@@ -835,8 +837,8 @@ async function makePauseCanvas() {
   if (!selectedMovies.length) throw new Error("請先選擇至少一套電影。");
 
   const canvas = document.createElement("canvas");
-  canvas.width = EXPORT_WIDTH;
-  canvas.height = EXPORT_HEIGHT;
+  canvas.width = PAUSE_EXPORT_WIDTH;
+  canvas.height = PAUSE_EXPORT_HEIGHT;
   const ctx = canvas.getContext("2d");
   const message = pauseMessage.value.trim() || DEFAULT_PAUSE_MESSAGE;
   const posterImages = await Promise.all(selectedMovies.map(async (movie) => {
@@ -850,7 +852,7 @@ async function makePauseCanvas() {
   const pauseLayout = getPauseNoticeLayout(ctx, message, pauseTextColor.value, selectedMovies.length);
 
   ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
+  ctx.fillRect(0, 0, PAUSE_EXPORT_WIDTH, PAUSE_EXPORT_HEIGHT);
 
   const infoBox = pauseLayout.box;
   roundedRectPath(ctx, infoBox.x, infoBox.y, infoBox.width, infoBox.height, 168);
@@ -862,7 +864,7 @@ async function makePauseCanvas() {
 
   const topText = pauseLayout.text;
   setCanvasFont(ctx, 800, topText.size);
-  drawRichLines(ctx, topText.lines, EXPORT_WIDTH / 2, topText.centerY - topText.textHeight / 2 + topText.size, topText.lineHeight);
+  drawRichLines(ctx, topText.lines, PAUSE_EXPORT_WIDTH / 2, topText.centerY - topText.textHeight / 2 + topText.size, topText.lineHeight);
   ctx.textAlign = "left";
 
   const posterArea = pauseLayout.posterArea;
@@ -887,31 +889,23 @@ async function makeStoryCanvas() {
   if (!selectedMovie) throw new Error("未揀電影");
 
   const canvas = document.createElement("canvas");
-  canvas.width = EXPORT_WIDTH;
-  canvas.height = EXPORT_HEIGHT;
+  canvas.width = STORY_EXPORT_WIDTH;
+  canvas.height = STORY_EXPORT_HEIGHT;
   const ctx = canvas.getContext("2d");
-  const x = 170;
-  const posterHeight = 1280;
-  const redLineHeight = 28;
-  const contentTop = posterHeight + 160;
-  const layout = buildExportLayout(ctx, selectedMovie, {
-    maxWidth: EXPORT_WIDTH - x * 2,
-    bottom: EXPORT_HEIGHT - 160,
-    startY: contentTop,
-    baseScale: 2.12
-  });
+  const layout = buildExportLayout(ctx, selectedMovie);
   const img = await loadImage(selectedMovie.posterUrl);
 
   ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
-  drawContain(ctx, img, 0, 0, EXPORT_WIDTH, posterHeight);
+  ctx.fillRect(0, 0, STORY_EXPORT_WIDTH, STORY_EXPORT_HEIGHT);
+  drawContain(ctx, img, 0, 0, STORY_EXPORT_WIDTH, 760);
 
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, posterHeight, EXPORT_WIDTH, EXPORT_HEIGHT - posterHeight);
+  ctx.fillRect(0, 760, STORY_EXPORT_WIDTH, 1160);
   ctx.fillStyle = "#b82435";
-  ctx.fillRect(0, posterHeight, EXPORT_WIDTH, redLineHeight);
+  ctx.fillRect(0, 760, STORY_EXPORT_WIDTH, 12);
 
-  let y = contentTop;
+  const x = 74;
+  let y = 830;
 
   ctx.fillStyle = "#b82435";
   setCanvasFont(ctx, 700, layout.sizes.meta);
@@ -938,7 +932,7 @@ async function makeStoryCanvas() {
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(x, y);
-  ctx.lineTo(EXPORT_WIDTH - x, y);
+  ctx.lineTo(1006, y);
   ctx.stroke();
   y += 58 * layout.scale;
 
