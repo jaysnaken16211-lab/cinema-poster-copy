@@ -16,8 +16,8 @@ const statusEl = document.querySelector("#status");
 const storyCard = document.querySelector("#card");
 const pauseCard = document.querySelector("#pauseCard");
 const pauseMessage = document.querySelector("#pauseMessage");
-const pauseMovieList = document.querySelector("#pauseMovieList");
-const pauseSelectedCount = document.querySelector("#pauseSelectedCount");
+const pausePosterGrid = document.querySelector("#pausePosterGrid");
+const pauseEmpty = document.querySelector("#pauseEmpty");
 const cardPoster = document.querySelector("#cardPoster");
 const cardMeta = document.querySelector("#cardMeta");
 const titleZh = document.querySelector("#titleZh");
@@ -29,7 +29,7 @@ const creditsEnLine = document.querySelector("#creditsEnLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-pause1";
+const APP_VERSION = "20260907-pauseposters1";
 const AUTH_KEY = "cinemaCardAuthorized";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
 
@@ -104,6 +104,13 @@ function getSelectedPauseMovies() {
   return movies.filter((movie) => pauseMovieIds.has(String(movie.id)));
 }
 
+function getPauseGridColumns(count) {
+  if (count <= 1) return 1;
+  if (count <= 4) return 2;
+  if (count <= 9) return 3;
+  return 4;
+}
+
 function updateCountLabel() {
   if (currentMode === "pause") {
     countLabel.textContent = `${getSelectedPauseMovies().length}/${movies.length} 已選`;
@@ -123,33 +130,26 @@ function updatePosterStates() {
 
 function updatePausePreview() {
   const selected = getSelectedPauseMovies();
-  pauseSelectedCount.textContent = `${selected.length} 套電影`;
-  pauseMovieList.innerHTML = "";
+  pausePosterGrid.innerHTML = "";
+  pausePosterGrid.style.setProperty("--pause-cols", String(getPauseGridColumns(selected.length)));
+  pauseEmpty.hidden = selected.length > 0;
 
   if (!selected.length) {
-    const item = document.createElement("li");
-    item.className = "pause-empty";
-    item.textContent = "未選擇電影";
-    pauseMovieList.append(item);
     updateCountLabel();
     return;
   }
 
   for (const movie of selected) {
-    const item = document.createElement("li");
-    const title = document.createElement("span");
-    title.className = "pause-movie-title";
-    title.textContent = movie.titleZh || movie.titleEn;
-    item.append(title);
+    const tile = document.createElement("div");
+    tile.className = "pause-poster-tile";
 
-    if (movie.titleEn && movie.titleEn !== movie.titleZh) {
-      const titleEnEl = document.createElement("span");
-      titleEnEl.className = "pause-movie-en";
-      titleEnEl.textContent = movie.titleEn;
-      item.append(titleEnEl);
-    }
+    const img = document.createElement("img");
+    img.src = movie.posterUrl;
+    img.alt = movie.titleZh || movie.titleEn || "電影海報";
+    img.loading = "lazy";
 
-    pauseMovieList.append(item);
+    tile.append(img);
+    pausePosterGrid.append(tile);
   }
 
   updateCountLabel();
@@ -546,50 +546,68 @@ function fitWrappedText(ctx, text, { maxWidth, maxHeight, weight, maxSize, minSi
   };
 }
 
-function buildPauseMovieText(movie) {
-  const title = movie.titleZh || movie.titleEn || "未命名電影";
-  if (movie.titleEn && movie.titleEn !== movie.titleZh) return `${title} / ${movie.titleEn}`;
-  return title;
+function getPausePosterLayout(count, width, height) {
+  let best = null;
+
+  for (let cols = 1; cols <= Math.min(count, 6); cols += 1) {
+    const rows = Math.ceil(count / cols);
+    const gap = cols >= 5 || rows >= 4 ? 18 : 24;
+    const cellWidth = (width - (cols - 1) * gap) / cols;
+    const cellHeight = (height - (rows - 1) * gap) / rows;
+    let posterWidth = Math.min(cellWidth, cellHeight * (2 / 3));
+    let posterHeight = posterWidth * 1.5;
+
+    if (posterHeight > cellHeight) {
+      posterHeight = cellHeight;
+      posterWidth = posterHeight * (2 / 3);
+    }
+
+    const posterArea = posterWidth * posterHeight;
+    if (!best || posterArea > best.posterArea) {
+      best = { cols, rows, gap, posterWidth, posterHeight, posterArea };
+    }
+  }
+
+  return best;
 }
 
-function buildPauseListLayout(ctx, selectedMovies, maxWidth, maxHeight) {
-  for (let size = 32; size >= 22; size -= 2) {
-    setCanvasFont(ctx, 700, size);
-    const lineHeight = size * 1.35;
-    const gap = size * 0.55;
-    const blocks = selectedMovies.map((movie) => ellipsizeLines(getWrappedLines(ctx, `• ${buildPauseMovieText(movie)}`, maxWidth), 2));
-    const height = blocks.reduce((total, block) => total + block.length * lineHeight, 0) + Math.max(0, blocks.length - 1) * gap;
-    if (height <= maxHeight) return { size, lineHeight, gap, blocks };
-  }
+function drawPosterFallback(ctx, movie, x, y, width, height) {
+  ctx.save();
+  ctx.fillStyle = "#f6f2ec";
+  ctx.fillRect(x, y, width, height);
+  ctx.strokeStyle = "#ded9d2";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(x, y, width, height);
 
-  const size = 22;
-  const lineHeight = size * 1.35;
-  const gap = size * 0.55;
-  setCanvasFont(ctx, 700, size);
-  const blocks = [];
-  let usedHeight = 0;
-
-  for (const movie of selectedMovies) {
-    const block = ellipsizeLines(getWrappedLines(ctx, `• ${buildPauseMovieText(movie)}`, maxWidth), 2);
-    const nextHeight = block.length * lineHeight + (blocks.length ? gap : 0);
-    if (usedHeight + nextHeight > maxHeight) break;
-    blocks.push(block);
-    usedHeight += nextHeight;
-  }
-
-  if (blocks.length < selectedMovies.length && blocks.length) {
-    const lastBlock = blocks[blocks.length - 1];
-    lastBlock[lastBlock.length - 1] = `${lastBlock[lastBlock.length - 1].replace(/…$/, "")}…`;
-  }
-
-  return { size, lineHeight, gap, blocks };
+  ctx.fillStyle = "#555555";
+  ctx.textAlign = "center";
+  setCanvasFont(ctx, 700, 24);
+  const title = movie.titleZh || movie.titleEn || "電影海報";
+  const lines = ellipsizeLines(getWrappedLines(ctx, title, width - 32), 3);
+  const lineHeight = 32;
+  const startY = y + height / 2 - ((lines.length - 1) * lineHeight) / 2 + 8;
+  drawLines(ctx, lines, x + width / 2, startY, lineHeight);
+  ctx.restore();
 }
 
-function drawLineBlocks(ctx, blocks, x, y, lineHeight, gap) {
-  for (const block of blocks) {
-    y = drawLines(ctx, block, x, y, lineHeight) + gap;
+function drawPosterTile(ctx, img, movie, x, y, width, height) {
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.18)";
+  ctx.shadowBlur = 22;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(x, y, width, height);
+  ctx.restore();
+
+  if (img) {
+    drawContain(ctx, img, x, y, width, height);
+  } else {
+    drawPosterFallback(ctx, movie, x, y, width, height);
   }
-  return y;
+
+  ctx.strokeStyle = "#e4ded6";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 1, y + 1, width - 2, height - 2);
 }
 
 async function makePauseCanvas() {
@@ -601,6 +619,13 @@ async function makePauseCanvas() {
   canvas.height = 1920;
   const ctx = canvas.getContext("2d");
   const message = pauseMessage.value.trim() || "優惠暫停";
+  const posterImages = await Promise.all(selectedMovies.map(async (movie) => {
+    try {
+      return await loadImage(movie.posterUrl);
+    } catch {
+      return null;
+    }
+  }));
 
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -626,17 +651,20 @@ async function makePauseCanvas() {
   ctx.fillRect(0, 960, 1080, 12);
 
   const x = 74;
-  ctx.fillStyle = "#171717";
-  setCanvasFont(ctx, 800, 48);
-  ctx.fillText("優惠暫停電影", x, 1064);
-  ctx.fillStyle = "#777777";
-  setCanvasFont(ctx, 700, 25);
-  ctx.fillText(`${selectedMovies.length} 套電影`, x, 1106);
+  const posterArea = { x, y: 1018, width: 932, height: 790 };
+  const layout = getPausePosterLayout(selectedMovies.length, posterArea.width, posterArea.height);
+  const gridWidth = layout.cols * layout.posterWidth + (layout.cols - 1) * layout.gap;
+  const gridHeight = layout.rows * layout.posterHeight + (layout.rows - 1) * layout.gap;
+  const startX = posterArea.x + (posterArea.width - gridWidth) / 2;
+  const startY = posterArea.y + (posterArea.height - gridHeight) / 2;
 
-  const listLayout = buildPauseListLayout(ctx, selectedMovies, 932, 610);
-  ctx.fillStyle = "#2b2b2b";
-  setCanvasFont(ctx, 700, listLayout.size);
-  drawLineBlocks(ctx, listLayout.blocks, x, 1172, listLayout.lineHeight, listLayout.gap);
+  selectedMovies.forEach((movie, index) => {
+    const col = index % layout.cols;
+    const row = Math.floor(index / layout.cols);
+    const posterX = startX + col * (layout.posterWidth + layout.gap);
+    const posterY = startY + row * (layout.posterHeight + layout.gap);
+    drawPosterTile(ctx, posterImages[index], movie, posterX, posterY, layout.posterWidth, layout.posterHeight);
+  });
 
   ctx.fillStyle = "#777777";
   setCanvasFont(ctx, 400, 22);

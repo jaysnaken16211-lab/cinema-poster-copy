@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>電影簡介圖片卡</title>
-    <link rel="stylesheet" href="styles.css?v=20260907-pause1" />
+    <link rel="stylesheet" href="styles.css?v=20260907-pauseposters1" />
   </head>
   <body class="is-locked">
     <section id="authScreen" class="auth-screen" aria-live="polite">
@@ -75,12 +75,9 @@
               <label class="visually-hidden" for="pauseMessage">優惠暫停文字</label>
               <textarea id="pauseMessage" maxlength="180" spellcheck="false">優惠暫停</textarea>
             </section>
-            <section class="pause-list-area">
-              <div class="pause-list-head">
-                <h2>優惠暫停</h2>
-                <span id="pauseSelectedCount">0 套電影</span>
-              </div>
-              <ul id="pauseMovieList" class="pause-movie-list"></ul>
+            <section class="pause-poster-area">
+              <div id="pausePosterGrid" class="pause-poster-grid"></div>
+              <p id="pauseEmpty" class="pause-empty">未選擇電影</p>
             </section>
           </article>
           <p id="status" class="status">準備中...</p>
@@ -88,6 +85,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=20260907-pause1" type="module"></script>
+    <script src="app.js?v=20260907-pauseposters1" type="module"></script>
   </body>
 </html>

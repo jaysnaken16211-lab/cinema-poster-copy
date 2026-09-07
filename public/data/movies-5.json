@@ -1,6 +1,6 @@
 {
   "source": "https://www.cinema.com.hk/hk/cinema/5",
-  "fetchedAt": "2026-09-07T01:46:06.236Z",
+  "fetchedAt": "2026-09-07T02:26:09.786Z",
   "cinemaID": "5",
   "movies": [
     {
@@ -254,6 +254,27 @@
       "posterFile": "programHx_bdb635d6-8685-435b-94dd-ea572cea3367.jpg",
       "posterUrl": "data/posters/programHx_bdb635d6-8685-435b-94dd-ea572cea3367.jpg",
       "firstShowTime": "2026-10-07T11:45:00.000Z"
+    },
+    {
+      "id": 1281,
+      "titleZh": "ALWAYS LALISA ",
+      "titleEn": "ALWAYS LALISA",
+      "synopsisZh": "《Always Lalisa》是一部記錄全球巨星 LISA 的長篇紀錄片，捕捉她離開風靡全球、讓她躍升為世界知名表演者的 K-pop 現象級女團 BLACKPINK 後，歷經蛻變的一年。團體暫停活動後，LISA 正式展開個人事業的全新篇章，同時直面一個關鍵問題：卸下 BLACKPINK 的光環後，她究竟是誰？\n本片記錄了 LISA 創作、錄音並發行首張個人專輯《Alter Ego》的歷程；同時見證她跨足影視圈，參演《白蓮花大飯店》第三季，以及全力備戰 2025 年 Coachella 音樂節的首次大型個人演出。在泰國土生土長的 LISA，14 歲便離鄉背井，遠赴南韓接受嚴格的 K-pop 訓練，最終躍升為風靡全球的超級巨星。然而，開創屬於自己的道路，尤其是在西方音樂市場，意味著要面對新的壓力、無所不在的放大檢視，以及按照自己的意志重新定義自我的挑戰。\n私密、感性且真摯赤裸，《Always Lalisa》捕捉了一位站在人生十字路口的藝術家，記錄她充滿冒險與自我蛻變、探索的一年；LISA 不僅在定義人生的新篇章，更在一步步描繪自己渴望成為的女性與藝術家模樣。",
+      "synopsisEn": "Always Lalisa is a feature-length documentary following global superstar LISA during a transformative year away from Blackpink, the K-pop phenomenon that made her one of the world's most recognizable performers. As the group pauses activities, LISA embarks on the first true chapter of her solo career, confronting the question of who she is beyond Blackpink.\nThe film follows LISA as she writes, records, and releases her debut solo album, Alter Ego, makes her acting debut in the third season of The White Lotus, and prepares for her first major solo performance at the 2025 Coachella Music Festival. Born and raised in Thailand, LISA left home at fourteen to train in South Korea's demanding K-pop system, ultimately rising to global superstardom. But forging her own path, particularly in the Western music market, brings new pressures, relentless scrutiny, and the challenge of redefining herself on her own terms.\nIntimate, emotional, and revealing, Always Lalisa captures an artist at a crossroads, documenting a year of risk, reinvention, and self-discovery as LISA begins to define not only her next chapter, but the woman and artist she wants to become.",
+      "category": "",
+      "duration": "100 分鐘 / 100 mins",
+      "openingDate": "2026-10-12",
+      "languageZh": "",
+      "languageEn": "",
+      "subtitleZh": "中文",
+      "subtitleEn": "Chinese",
+      "directorZh": "",
+      "directorEn": "",
+      "castZh": "LISA",
+      "castEn": "LISA",
+      "posterFile": "programHy_fb8085aa-0fcb-411e-875e-82e3dbc31670.jpg",
+      "posterUrl": "data/posters/programHy_fb8085aa-0fcb-411e-875e-82e3dbc31670.jpg",
+      "firstShowTime": "2026-10-17T06:00:00.000Z"
     }
   ]
 }
