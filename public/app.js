@@ -22,7 +22,7 @@ const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-clean1";
+const APP_VERSION = "20260907-oak1";
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
 const EXPORT_SCALE = 2;
