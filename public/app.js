@@ -15,6 +15,7 @@ const statusEl = document.querySelector("#status");
 
 const storyCard = document.querySelector("#card");
 const pauseCard = document.querySelector("#pauseCard");
+const pauseCopyArea = document.querySelector(".pause-copy-area");
 const pauseMessage = document.querySelector("#pauseMessage");
 const pauseMessagePreview = document.querySelector("#pauseMessagePreview");
 const pauseTextColor = document.querySelector("#pauseTextColor");
@@ -30,7 +31,7 @@ const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-richpause1";
+const APP_VERSION = "20260907-dynamicpause1";
 const AUTH_KEY = "cinemaCardAuthorized";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
 const PAUSE_HIGHLIGHT_COLORS = {
@@ -169,6 +170,23 @@ function getPauseTextSegments(text, baseColor) {
   return segments.length ? segments : [{ text: "", color: baseColor }];
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getEstimatedPauseVisualLineCount(text) {
+  return String(text || "").split("\n").reduce((total, line) => {
+    const length = [...line].length;
+    return total + Math.max(1, Math.ceil(length / 34));
+  }, 0);
+}
+
+function updatePauseCopyAreaHeight() {
+  const lines = getEstimatedPauseVisualLineCount(pauseMessage.value || DEFAULT_PAUSE_MESSAGE);
+  const height = clamp(78 + lines * 31, 245, 630);
+  pauseCopyArea.style.flexBasis = `${height}px`;
+}
+
 function renderPauseMessagePreview() {
   const baseColor = pauseTextColor.value;
   pauseMessagePreview.innerHTML = "";
@@ -190,6 +208,7 @@ function renderPauseMessagePreview() {
 
     pauseMessagePreview.append(lineEl);
   }
+  updatePauseCopyAreaHeight();
 }
 
 function updatePauseTextColor() {
@@ -742,6 +761,31 @@ function getPausePosterLayout(count, width, height) {
   return best;
 }
 
+function getPauseNoticeLayout(ctx, message, baseColor, posterCount) {
+  const box = { x: 86, y: 64, width: 908 };
+  const textWidth = 790;
+  const minPosterHeight = posterCount <= 4 ? 520 : 420;
+  const bottomMargin = 76;
+  const boxPosterGap = 48;
+  const maxBoxHeight = 1920 - box.y - boxPosterGap - minPosterHeight - bottomMargin;
+  const size = 46;
+  const lineHeight = size * 1.28;
+
+  setCanvasFont(ctx, 800, size);
+  const allLines = getWrappedRichLines(ctx, message, textWidth, baseColor);
+  const maxLines = Math.max(1, Math.floor((maxBoxHeight - 112) / lineHeight));
+  const lines = allLines.length > maxLines ? ellipsizeRichLines(allLines, maxLines, baseColor) : allLines;
+  const textHeight = lines.length * lineHeight;
+  const boxHeight = clamp(textHeight + 150, 410, maxBoxHeight);
+  const posterAreaY = box.y + boxHeight + boxPosterGap;
+
+  return {
+    box: { ...box, height: boxHeight },
+    text: { size, lineHeight, lines, textHeight, centerY: box.y + boxHeight / 2 },
+    posterArea: { x: 74, y: posterAreaY, width: 932, height: 1920 - posterAreaY - bottomMargin }
+  };
+}
+
 function drawPosterFallback(ctx, movie, x, y, width, height) {
   ctx.save();
   ctx.fillStyle = "#f6f2ec";
@@ -798,12 +842,12 @@ async function makePauseCanvas() {
     }
   }));
 
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, canvas.width, 840);
+  const pauseLayout = getPauseNoticeLayout(ctx, message, pauseTextColor.value, selectedMovies.length);
 
-  const infoBox = { x: 110, y: 86, width: 860, height: 680 };
+  ctx.fillStyle = "#f8f4ed";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const infoBox = pauseLayout.box;
   roundedRectPath(ctx, infoBox.x, infoBox.y, infoBox.width, infoBox.height, 92);
   ctx.fillStyle = "rgba(255, 255, 255, 0.42)";
   ctx.fill();
@@ -811,22 +855,12 @@ async function makePauseCanvas() {
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  const topText = fitWrappedRichText(ctx, message, {
-    maxWidth: 760,
-    maxHeight: 520,
-    weight: 800,
-    maxSize: 46,
-    minSize: 24,
-    lineHeightFactor: 1.32,
-    baseColor: pauseTextColor.value
-  });
+  const topText = pauseLayout.text;
   setCanvasFont(ctx, 800, topText.size);
-  const topTextHeight = topText.lines.length * topText.lineHeight;
-  drawRichLines(ctx, topText.lines, 540, infoBox.y + infoBox.height / 2 - topTextHeight / 2 + topText.size, topText.lineHeight);
+  drawRichLines(ctx, topText.lines, 540, topText.centerY - topText.textHeight / 2 + topText.size, topText.lineHeight);
   ctx.textAlign = "left";
 
-  const x = 74;
-  const posterArea = { x, y: 870, width: 932, height: 900 };
+  const posterArea = pauseLayout.posterArea;
   const layout = getPausePosterLayout(selectedMovies.length, posterArea.width, posterArea.height);
   const gridWidth = layout.cols * layout.posterWidth + (layout.cols - 1) * layout.gap;
   const gridHeight = layout.rows * layout.posterHeight + (layout.rows - 1) * layout.gap;
