@@ -143,6 +143,23 @@ input {
   background: #fff;
 }
 
+.pause-color-tool {
+  display: none;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+body[data-mode="pause"] .pause-color-tool {
+  display: grid;
+}
+
+.pause-color-tool input {
+  width: 42px;
+  padding: 2px;
+}
+
 .auth-screen {
   position: fixed;
   inset: 0;
@@ -402,7 +419,6 @@ body[data-mode="pause"] .poster-check {
   display: grid;
   align-items: stretch;
   padding: 34px 38px;
-  border-bottom: 6px solid var(--accent);
   background: #f8f4ed;
 }
 

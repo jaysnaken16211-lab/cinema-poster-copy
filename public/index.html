@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>電影簡介圖片卡</title>
-    <link rel="stylesheet" href="styles.css?v=20260907-pauseterms1" />
+    <link rel="stylesheet" href="styles.css?v=20260907-pausecolor1" />
   </head>
   <body class="is-locked">
     <section id="authScreen" class="auth-screen" aria-live="polite">
@@ -48,6 +48,10 @@
           <div class="panel-head">
             <h2 id="previewTitle">圖片預覽</h2>
             <div class="actions">
+              <label id="pauseColorTool" class="pause-color-tool" for="pauseTextColor">
+                <span>文字色</span>
+                <input id="pauseTextColor" type="color" value="#171717" />
+              </label>
               <button id="copyBtn">複製圖片</button>
               <button id="downloadBtn">下載 PNG</button>
             </div>
@@ -66,7 +70,6 @@
               <h3 id="titleEn"></h3>
               <p id="synopsisEn" class="synopsis en"></p>
               <p id="creditsEnLine" class="credits-line en"></p>
-              <p id="sourceLine" class="source-line"></p>
             </div>
           </article>
 
@@ -90,6 +93,6 @@ IMAX and the following movies with price adjustments</textarea>
       </section>
     </main>
 
-    <script src="app.js?v=20260907-pauseterms1" type="module"></script>
+    <script src="app.js?v=20260907-pausecolor1" type="module"></script>
   </body>
 </html>

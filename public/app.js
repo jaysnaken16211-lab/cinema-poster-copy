@@ -16,6 +16,7 @@ const statusEl = document.querySelector("#status");
 const storyCard = document.querySelector("#card");
 const pauseCard = document.querySelector("#pauseCard");
 const pauseMessage = document.querySelector("#pauseMessage");
+const pauseTextColor = document.querySelector("#pauseTextColor");
 const pausePosterGrid = document.querySelector("#pausePosterGrid");
 const pauseEmpty = document.querySelector("#pauseEmpty");
 const cardPoster = document.querySelector("#cardPoster");
@@ -26,10 +27,9 @@ const titleEn = document.querySelector("#titleEn");
 const synopsisEn = document.querySelector("#synopsisEn");
 const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
-const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-pauseterms1";
+const APP_VERSION = "20260907-pausecolor1";
 const AUTH_KEY = "cinemaCardAuthorized";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
 const DEFAULT_PAUSE_MESSAGE = `MOKO商場買一送一優惠券
@@ -132,6 +132,10 @@ function updatePosterStates() {
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
+}
+
+function updatePauseTextColor() {
+  pauseMessage.style.color = pauseTextColor.value;
 }
 
 function updatePausePreview() {
@@ -264,7 +268,6 @@ function selectMovie(movie) {
   creditsZhLine.hidden = creditSections.zh.length === 0;
   creditsEnLine.textContent = creditSections.en.join("\n");
   creditsEnLine.hidden = creditSections.en.length === 0;
-  sourceLine.textContent = "Source: cinema.com.hk";
   updatePosterStates();
 }
 
@@ -669,18 +672,15 @@ async function makePauseCanvas() {
     minSize: 24,
     lineHeightFactor: 1.32
   });
-  ctx.fillStyle = "#171717";
+  ctx.fillStyle = pauseTextColor.value;
   ctx.textAlign = "center";
   setCanvasFont(ctx, 800, topText.size);
   const topTextHeight = topText.lines.length * topText.lineHeight;
   drawLines(ctx, topText.lines, 540, infoBox.y + infoBox.height / 2 - topTextHeight / 2 + topText.size, topText.lineHeight);
   ctx.textAlign = "left";
 
-  ctx.fillStyle = "#b82435";
-  ctx.fillRect(0, 840, 1080, 12);
-
   const x = 74;
-  const posterArea = { x, y: 900, width: 932, height: 850 };
+  const posterArea = { x, y: 870, width: 932, height: 900 };
   const layout = getPausePosterLayout(selectedMovies.length, posterArea.width, posterArea.height);
   const gridWidth = layout.cols * layout.posterWidth + (layout.cols - 1) * layout.gap;
   const gridHeight = layout.rows * layout.posterHeight + (layout.rows - 1) * layout.gap;
@@ -695,9 +695,6 @@ async function makePauseCanvas() {
     drawPosterTile(ctx, posterImages[index], movie, posterX, posterY, layout.posterWidth, layout.posterHeight);
   });
 
-  ctx.fillStyle = "#777777";
-  setCanvasFont(ctx, 400, 22);
-  ctx.fillText("Source: cinema.com.hk", x, 1874);
   return canvas;
 }
 
@@ -767,9 +764,6 @@ async function makeStoryCanvas() {
     drawLines(ctx, layout.enCreditLines, x, y, layout.lineHeights.credits);
   }
 
-  ctx.fillStyle = "#777";
-  setCanvasFont(ctx, 400, 22);
-  ctx.fillText("Source: cinema.com.hk", x, 1874);
   return canvas;
 }
 
@@ -823,6 +817,7 @@ async function downloadImage() {
 refreshBtn.addEventListener("click", loadMovies);
 copyBtn.addEventListener("click", () => copyImage().catch((error) => setStatus(`複製失敗：${error.message}`)));
 downloadBtn.addEventListener("click", () => downloadImage().catch((error) => setStatus(`下載失敗：${error.message}`)));
+pauseTextColor.addEventListener("input", updatePauseTextColor);
 for (const button of modeButtons) {
   button.addEventListener("click", () => setMode(button.dataset.mode));
 }
@@ -832,6 +827,7 @@ authForm.addEventListener("submit", (event) => {
   });
 });
 
+updatePauseTextColor();
 setMode("story");
 
 if (localStorage.getItem(AUTH_KEY) === "1") {
