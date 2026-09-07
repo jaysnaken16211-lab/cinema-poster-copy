@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>電影簡介圖片卡</title>
-    <link rel="stylesheet" href="styles.css?v=20260907-pausecolor1" />
+    <link rel="stylesheet" href="styles.css?v=20260907-richpause1" />
   </head>
   <body class="is-locked">
     <section id="authScreen" class="auth-screen" aria-live="polite">
@@ -49,7 +49,7 @@
             <h2 id="previewTitle">圖片預覽</h2>
             <div class="actions">
               <label id="pauseColorTool" class="pause-color-tool" for="pauseTextColor">
-                <span>文字色</span>
+                <span>基本文字色</span>
                 <input id="pauseTextColor" type="color" value="#171717" />
               </label>
               <button id="copyBtn">複製圖片</button>
@@ -76,6 +76,7 @@
           <article id="pauseCard" class="movie-card pause-card" aria-live="polite" hidden>
             <section class="pause-copy-area">
               <label class="visually-hidden" for="pauseMessage">優惠暫停文字</label>
+              <div id="pauseMessagePreview" class="pause-message-preview" aria-hidden="true"></div>
               <textarea id="pauseMessage" maxlength="420" spellcheck="false">MOKO商場買一送一優惠券
 不適用於公眾假日,3D電影
 IMAX及以下因票價調整的電影
@@ -93,6 +94,6 @@ IMAX and the following movies with price adjustments</textarea>
       </section>
     </main>
 
-    <script src="app.js?v=20260907-pausecolor1" type="module"></script>
+    <script src="app.js?v=20260907-richpause1" type="module"></script>
   </body>
 </html>

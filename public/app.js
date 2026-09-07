@@ -16,6 +16,7 @@ const statusEl = document.querySelector("#status");
 const storyCard = document.querySelector("#card");
 const pauseCard = document.querySelector("#pauseCard");
 const pauseMessage = document.querySelector("#pauseMessage");
+const pauseMessagePreview = document.querySelector("#pauseMessagePreview");
 const pauseTextColor = document.querySelector("#pauseTextColor");
 const pausePosterGrid = document.querySelector("#pausePosterGrid");
 const pauseEmpty = document.querySelector("#pauseEmpty");
@@ -29,9 +30,14 @@ const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-pausecolor1";
+const APP_VERSION = "20260907-richpause1";
 const AUTH_KEY = "cinemaCardAuthorized";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
+const PAUSE_HIGHLIGHT_COLORS = {
+  red: "#c8262e",
+  green: "#168b48",
+  blue: "#2468b2"
+};
 const DEFAULT_PAUSE_MESSAGE = `MOKO商場買一送一優惠券
 不適用於公眾假日,3D電影
 IMAX及以下因票價調整的電影
@@ -134,8 +140,60 @@ function updatePosterStates() {
   });
 }
 
+function getPauseSegmentColor(text, baseColor) {
+  const normalized = text.toLowerCase();
+  if (normalized.includes("imax")) return PAUSE_HIGHLIGHT_COLORS.blue;
+  if (normalized.includes("3d")) return PAUSE_HIGHLIGHT_COLORS.green;
+  if (normalized.includes("public holiday") || text.includes("公眾假日")) return PAUSE_HIGHLIGHT_COLORS.red;
+  return baseColor;
+}
+
+function getPauseTextSegments(text, baseColor) {
+  const pattern = /(Public Holiday|公眾假日|3D Movie|3D電影|IMAX|3D)/gi;
+  const segments = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ text: text.slice(lastIndex, match.index), color: baseColor });
+    }
+    segments.push({ text: match[0], color: getPauseSegmentColor(match[0], baseColor) });
+    lastIndex = pattern.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ text: text.slice(lastIndex), color: baseColor });
+  }
+
+  return segments.length ? segments : [{ text: "", color: baseColor }];
+}
+
+function renderPauseMessagePreview() {
+  const baseColor = pauseTextColor.value;
+  pauseMessagePreview.innerHTML = "";
+
+  for (const line of String(pauseMessage.value || "").split("\n")) {
+    const lineEl = document.createElement("div");
+    lineEl.className = "pause-message-line";
+
+    if (!line) {
+      lineEl.textContent = "\u00a0";
+    } else {
+      for (const segment of getPauseTextSegments(line, baseColor)) {
+        const span = document.createElement("span");
+        span.textContent = segment.text;
+        span.style.color = segment.color;
+        lineEl.append(span);
+      }
+    }
+
+    pauseMessagePreview.append(lineEl);
+  }
+}
+
 function updatePauseTextColor() {
-  pauseMessage.style.color = pauseTextColor.value;
+  renderPauseMessagePreview();
 }
 
 function updatePausePreview() {
@@ -405,6 +463,95 @@ function drawLines(ctx, lines, x, y, lineHeight) {
   return y;
 }
 
+function appendRichChar(line, color, char) {
+  const last = line[line.length - 1];
+  if (last && last.color === color) {
+    last.text += char;
+  } else {
+    line.push({ text: char, color });
+  }
+}
+
+function getRichLineWidth(ctx, line) {
+  return line.reduce((width, segment) => width + ctx.measureText(segment.text).width, 0);
+}
+
+function getWrappedRichLines(ctx, text, maxWidth, baseColor) {
+  const lines = [];
+
+  for (const paragraph of String(text || "").split("\n")) {
+    if (!paragraph) {
+      lines.push([{ text: "", color: baseColor }]);
+      continue;
+    }
+
+    let line = [];
+    let lineWidth = 0;
+
+    for (const segment of getPauseTextSegments(paragraph, baseColor)) {
+      for (const char of [...segment.text]) {
+        const charWidth = ctx.measureText(char).width;
+        if (lineWidth + charWidth > maxWidth && line.length) {
+          lines.push(line);
+          line = [];
+          lineWidth = 0;
+          if (char === " ") continue;
+        }
+        appendRichChar(line, segment.color, char);
+        lineWidth += charWidth;
+      }
+    }
+
+    lines.push(line.length ? line : [{ text: "", color: baseColor }]);
+  }
+
+  return lines.length ? lines : [[{ text: "", color: baseColor }]];
+}
+
+function ellipsizeRichLines(lines, maxLines, baseColor) {
+  if (lines.length <= maxLines) return lines;
+  const trimmed = lines.slice(0, maxLines).map((line) => line.map((segment) => ({ ...segment })));
+  const lastLine = trimmed[trimmed.length - 1] || [{ text: "", color: baseColor }];
+  const lastSegment = lastLine[lastLine.length - 1] || { text: "", color: baseColor };
+  lastSegment.text = `${lastSegment.text.replace(/…$/, "")}…`;
+  if (!lastLine.length) lastLine.push(lastSegment);
+  trimmed[trimmed.length - 1] = lastLine;
+  return trimmed;
+}
+
+function fitWrappedRichText(ctx, text, { maxWidth, maxHeight, weight, maxSize, minSize, lineHeightFactor, baseColor }) {
+  for (let size = maxSize; size >= minSize; size -= 2) {
+    setCanvasFont(ctx, weight, size);
+    const lineHeight = size * lineHeightFactor;
+    const lines = getWrappedRichLines(ctx, text, maxWidth, baseColor);
+    if (lines.length * lineHeight <= maxHeight) return { size, lineHeight, lines };
+  }
+
+  setCanvasFont(ctx, weight, minSize);
+  const lineHeight = minSize * lineHeightFactor;
+  const maxLines = Math.max(1, Math.floor(maxHeight / lineHeight));
+  return {
+    size: minSize,
+    lineHeight,
+    lines: ellipsizeRichLines(getWrappedRichLines(ctx, text, maxWidth, baseColor), maxLines, baseColor)
+  };
+}
+
+function drawRichLines(ctx, lines, centerX, y, lineHeight) {
+  ctx.textAlign = "left";
+  for (const line of lines) {
+    let x = centerX - getRichLineWidth(ctx, line) / 2;
+    for (const segment of line) {
+      if (!segment.text) continue;
+      ctx.fillStyle = segment.color;
+      ctx.fillText(segment.text, x, y);
+      x += ctx.measureText(segment.text).width;
+    }
+    y += lineHeight;
+  }
+  return y;
+}
+
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   return drawLines(ctx, getWrappedLines(ctx, text, maxWidth), x, y, lineHeight);
 }
@@ -664,19 +811,18 @@ async function makePauseCanvas() {
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  const topText = fitWrappedText(ctx, message, {
+  const topText = fitWrappedRichText(ctx, message, {
     maxWidth: 760,
     maxHeight: 520,
     weight: 800,
     maxSize: 46,
     minSize: 24,
-    lineHeightFactor: 1.32
+    lineHeightFactor: 1.32,
+    baseColor: pauseTextColor.value
   });
-  ctx.fillStyle = pauseTextColor.value;
-  ctx.textAlign = "center";
   setCanvasFont(ctx, 800, topText.size);
   const topTextHeight = topText.lines.length * topText.lineHeight;
-  drawLines(ctx, topText.lines, 540, infoBox.y + infoBox.height / 2 - topTextHeight / 2 + topText.size, topText.lineHeight);
+  drawRichLines(ctx, topText.lines, 540, infoBox.y + infoBox.height / 2 - topTextHeight / 2 + topText.size, topText.lineHeight);
   ctx.textAlign = "left";
 
   const x = 74;
@@ -818,6 +964,7 @@ refreshBtn.addEventListener("click", loadMovies);
 copyBtn.addEventListener("click", () => copyImage().catch((error) => setStatus(`複製失敗：${error.message}`)));
 downloadBtn.addEventListener("click", () => downloadImage().catch((error) => setStatus(`下載失敗：${error.message}`)));
 pauseTextColor.addEventListener("input", updatePauseTextColor);
+pauseMessage.addEventListener("input", renderPauseMessagePreview);
 for (const button of modeButtons) {
   button.addEventListener("click", () => setMode(button.dataset.mode));
 }

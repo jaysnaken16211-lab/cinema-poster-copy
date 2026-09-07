@@ -1,29 +1,8 @@
 {
   "source": "https://www.cinema.com.hk/hk/cinema/5",
-  "fetchedAt": "2026-09-07T04:17:58.464Z",
+  "fetchedAt": "2026-09-07T05:08:41.432Z",
   "cinemaID": "5",
   "movies": [
-    {
-      "id": 675,
-      "titleZh": "反斗奇兵 5 (英語版)",
-      "titleEn": "Toy Story 5 (English Version)",
-      "synopsisZh": "2026年最令人期待的暑假重頭戲！全球累積票房狂收近30億美元，彼思史上最賣座動畫系列《反斗奇兵》升級回歸！大家最熟悉的玩具朋友胡迪、巴斯光年、翠絲，將聯同新舊玩具對抗全新強敵，誓要與現今小朋友最沉迷的各式電子科技產品決一死戰！迪士尼與彼思《反斗奇兵5》由《海底奇兵》金像導演安德魯史坦頓執導，將於2026年6月18日起優先場，6月25日大銀幕上映。",
-      "synopsisEn": "The toys are back in Disney and Pixar’s “Toy Story 5,” and this time it’s Toy meets Tech. Buzz, Woody, Jessie and the rest of the gang's jobs are challenged when they're introduced to what kids are obsessed with today...electronics!",
-      "category": "I",
-      "duration": "103 分鐘 / 103 mins",
-      "openingDate": "2026-06-25",
-      "languageZh": "英文",
-      "languageEn": "English",
-      "subtitleZh": "中文",
-      "subtitleEn": "Chinese",
-      "directorZh": "安德魯史坦頓",
-      "directorEn": "Andrew Stanton",
-      "castZh": "聲演：湯漢斯、添亞倫、鍾古錫、Greta Lee、高倫奧拜恩",
-      "castEn": "Voice Cast: Tom Hanks, Tim Allen, Joan Cusack, Greta Lee, Conan O’Brien",
-      "posterFile": "programZm_e9dc99a7-dc18-4300-887e-b09d76760a82.jpg",
-      "posterUrl": "data/posters/programZm_e9dc99a7-dc18-4300-887e-b09d76760a82.jpg",
-      "firstShowTime": "2026-09-07T04:20:00.000Z"
-    },
     {
       "id": 1238,
       "titleZh": "你最後留下的歌",
@@ -233,6 +212,27 @@
       "posterFile": "programpy_169d45b9-de0d-44ed-a5ba-f30f3364140b.jpg",
       "posterUrl": "data/posters/programpy_169d45b9-de0d-44ed-a5ba-f30f3364140b.jpg",
       "firstShowTime": "2026-09-08T02:45:00.000Z"
+    },
+    {
+      "id": 675,
+      "titleZh": "反斗奇兵 5 (英語版)",
+      "titleEn": "Toy Story 5 (English Version)",
+      "synopsisZh": "2026年最令人期待的暑假重頭戲！全球累積票房狂收近30億美元，彼思史上最賣座動畫系列《反斗奇兵》升級回歸！大家最熟悉的玩具朋友胡迪、巴斯光年、翠絲，將聯同新舊玩具對抗全新強敵，誓要與現今小朋友最沉迷的各式電子科技產品決一死戰！迪士尼與彼思《反斗奇兵5》由《海底奇兵》金像導演安德魯史坦頓執導，將於2026年6月18日起優先場，6月25日大銀幕上映。",
+      "synopsisEn": "The toys are back in Disney and Pixar’s “Toy Story 5,” and this time it’s Toy meets Tech. Buzz, Woody, Jessie and the rest of the gang's jobs are challenged when they're introduced to what kids are obsessed with today...electronics!",
+      "category": "I",
+      "duration": "103 分鐘 / 103 mins",
+      "openingDate": "2026-06-25",
+      "languageZh": "英文",
+      "languageEn": "English",
+      "subtitleZh": "中文",
+      "subtitleEn": "Chinese",
+      "directorZh": "安德魯史坦頓",
+      "directorEn": "Andrew Stanton",
+      "castZh": "聲演：湯漢斯、添亞倫、鍾古錫、Greta Lee、高倫奧拜恩",
+      "castEn": "Voice Cast: Tom Hanks, Tim Allen, Joan Cusack, Greta Lee, Conan O’Brien",
+      "posterFile": "programZm_e9dc99a7-dc18-4300-887e-b09d76760a82.jpg",
+      "posterUrl": "data/posters/programZm_e9dc99a7-dc18-4300-887e-b09d76760a82.jpg",
+      "firstShowTime": "2026-09-08T04:20:00.000Z"
     },
     {
       "id": 1229,
