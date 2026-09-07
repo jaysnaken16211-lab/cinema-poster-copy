@@ -103,29 +103,6 @@ h1 {
   justify-content: end;
 }
 
-.mode-switch {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: #fff;
-}
-
-.mode-button {
-  min-height: 34px;
-  padding: 0 12px;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--muted);
-}
-
-.mode-button:hover,
-.mode-button.is-active {
-  background: var(--accent);
-  color: #fff;
-}
-
 label {
   display: grid;
   gap: 6px;
@@ -141,23 +118,6 @@ input {
   border-radius: 6px;
   padding: 0 12px;
   background: #fff;
-}
-
-.pause-color-tool {
-  display: none;
-  grid-auto-flow: column;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-body[data-mode="pause"] .pause-color-tool {
-  display: grid;
-}
-
-.pause-color-tool input {
-  width: 42px;
-  padding: 2px;
 }
 
 .auth-screen {
@@ -287,35 +247,6 @@ body.is-locked .app {
   outline: 4px solid var(--gold);
 }
 
-.poster-check {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 26px;
-  height: 26px;
-  display: none;
-  place-items: center;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.86);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 900;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
-}
-
-body[data-mode="pause"] .poster-check {
-  display: grid;
-}
-
-.poster-button.is-active .poster-check {
-  background: var(--accent);
-}
-
-.poster-button.is-active .poster-check::before {
-  content: "✓";
-}
-
 .poster-button span {
   font-size: 13px;
   line-height: 1.35;
@@ -402,126 +333,6 @@ body[data-mode="pause"] .poster-check {
   margin: 20px 0;
 }
 
-.source-line {
-  margin: 20px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.pause-card {
-  aspect-ratio: 210 / 297;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: #f8f4ed;
-}
-
-.pause-copy-area {
-  position: relative;
-  display: grid;
-  align-items: stretch;
-  flex: 0 0 auto;
-  min-height: 245px;
-  max-height: 68%;
-  padding: 28px 38px 18px;
-  background: #f8f4ed;
-}
-
-.pause-message-preview,
-.pause-copy-area textarea {
-  grid-area: 1 / 1;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  border: 2px solid #2b2b2b;
-  border-radius: 42px;
-  text-align: center;
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1.42;
-  padding: 32px 28px;
-  overflow: hidden;
-}
-
-.pause-message-preview {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.45);
-  pointer-events: none;
-  white-space: pre-wrap;
-}
-
-.pause-copy-area textarea {
-  position: relative;
-  z-index: 1;
-  resize: none;
-  outline: 0;
-  background: transparent;
-  color: transparent;
-  caret-color: var(--ink);
-}
-
-.pause-copy-area textarea:focus {
-  border-color: #111111;
-}
-
-.pause-poster-area {
-  position: relative;
-  display: grid;
-  place-items: center;
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 18px 22px 28px;
-  overflow: hidden;
-  background: #f8f4ed;
-}
-
-.pause-poster-grid {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(var(--pause-cols, 1), minmax(0, 1fr));
-  grid-auto-rows: minmax(0, 1fr);
-  gap: 10px;
-  align-items: stretch;
-  justify-items: stretch;
-}
-
-.pause-poster-grid:empty {
-  display: none;
-}
-
-.pause-poster-tile {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-
-.pause-poster-tile img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: contain;
-  border-radius: 4px;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
-}
-
-.pause-empty {
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: 700;
-  margin: 0;
-}
-
-.pause-poster-grid:not(:empty) + .pause-empty {
-  display: none;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -570,9 +381,6 @@ body[data-mode="pause"] .poster-check {
     justify-content: end;
   }
 
-  .mode-switch {
-    flex-wrap: wrap;
-  }
 }
 
 @media (max-width: 560px) {
@@ -602,22 +410,4 @@ body[data-mode="pause"] .poster-check {
     padding: 20px;
   }
 
-  .mode-button {
-    flex: 1;
-  }
-
-  .pause-copy-area {
-    padding: 22px;
-  }
-
-  .pause-message-preview,
-  .pause-copy-area textarea {
-    border-radius: 30px;
-    font-size: 18px;
-    padding: 28px 18px;
-  }
-
-  .pause-poster-area {
-    padding: 20px;
-  }
 }

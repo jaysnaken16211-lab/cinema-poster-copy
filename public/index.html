@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>電影簡介圖片卡</title>
-    <link rel="stylesheet" href="styles.css?v=20260907-mixedsize1" />
+    <link rel="stylesheet" href="styles.css?v=20260907-storyonly1" />
   </head>
   <body class="is-locked">
     <section id="authScreen" class="auth-screen" aria-live="polite">
@@ -27,10 +27,6 @@
           <h1>電影簡介圖片卡</h1>
         </div>
         <div class="controls">
-          <div class="mode-switch" role="group" aria-label="圖片類型">
-            <button id="storyModeBtn" class="mode-button is-active" type="button" data-mode="story">故事簡介圖片</button>
-            <button id="pauseModeBtn" class="mode-button" type="button" data-mode="pause">優惠暫停</button>
-          </div>
           <button id="refreshBtn">刷新電影</button>
         </div>
       </section>
@@ -38,7 +34,7 @@
       <section class="layout">
         <aside class="poster-panel">
           <div class="panel-head">
-            <h2 id="posterPanelTitle">點擊 Poster</h2>
+            <h2>點擊 Poster</h2>
             <span id="countLabel">載入中</span>
           </div>
           <div id="posterGrid" class="poster-grid"></div>
@@ -46,12 +42,8 @@
 
         <section class="preview-panel">
           <div class="panel-head">
-            <h2 id="previewTitle">圖片預覽</h2>
+            <h2>圖片預覽</h2>
             <div class="actions">
-              <label id="pauseColorTool" class="pause-color-tool" for="pauseTextColor">
-                <span>基本文字色</span>
-                <input id="pauseTextColor" type="color" value="#171717" />
-              </label>
               <button id="copyBtn">複製圖片</button>
               <button id="downloadBtn">下載 PNG</button>
             </div>
@@ -73,27 +65,11 @@
             </div>
           </article>
 
-          <article id="pauseCard" class="movie-card pause-card" aria-live="polite" hidden>
-            <section class="pause-copy-area">
-              <label class="visually-hidden" for="pauseMessage">優惠暫停文字</label>
-              <div id="pauseMessagePreview" class="pause-message-preview" aria-hidden="true"></div>
-              <textarea id="pauseMessage" maxlength="420" spellcheck="false">MOKO商場買一送一優惠券
-不適用於公眾假日,3D電影
-IMAX及以下因票價調整的電影
-MOKO shopping mall buy one get one free coupon
-not applicable on Public Holiday,3D Movie
-IMAX and the following movies with price adjustments</textarea>
-            </section>
-            <section class="pause-poster-area">
-              <div id="pausePosterGrid" class="pause-poster-grid"></div>
-              <p id="pauseEmpty" class="pause-empty">未選擇電影</p>
-            </section>
-          </article>
           <p id="status" class="status">準備中...</p>
         </section>
       </section>
     </main>
 
-    <script src="app.js?v=20260907-mixedsize1" type="module"></script>
+    <script src="app.js?v=20260907-storyonly1" type="module"></script>
   </body>
 </html>

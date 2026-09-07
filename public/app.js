@@ -3,24 +3,13 @@ const authScreen = document.querySelector("#authScreen");
 const authForm = document.querySelector("#authForm");
 const passwordInput = document.querySelector("#passwordInput");
 const authError = document.querySelector("#authError");
-const modeButtons = document.querySelectorAll("[data-mode]");
 const posterGrid = document.querySelector("#posterGrid");
 const countLabel = document.querySelector("#countLabel");
-const posterPanelTitle = document.querySelector("#posterPanelTitle");
-const previewTitle = document.querySelector("#previewTitle");
 const refreshBtn = document.querySelector("#refreshBtn");
 const copyBtn = document.querySelector("#copyBtn");
 const downloadBtn = document.querySelector("#downloadBtn");
 const statusEl = document.querySelector("#status");
 
-const storyCard = document.querySelector("#card");
-const pauseCard = document.querySelector("#pauseCard");
-const pauseCopyArea = document.querySelector(".pause-copy-area");
-const pauseMessage = document.querySelector("#pauseMessage");
-const pauseMessagePreview = document.querySelector("#pauseMessagePreview");
-const pauseTextColor = document.querySelector("#pauseTextColor");
-const pausePosterGrid = document.querySelector("#pausePosterGrid");
-const pauseEmpty = document.querySelector("#pauseEmpty");
 const cardPoster = document.querySelector("#cardPoster");
 const cardMeta = document.querySelector("#cardMeta");
 const titleZh = document.querySelector("#titleZh");
@@ -31,24 +20,11 @@ const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-mixedsize1";
-const STORY_EXPORT_WIDTH = 1080;
-const STORY_EXPORT_HEIGHT = 1920;
-const PAUSE_EXPORT_WIDTH = 2480;
-const PAUSE_EXPORT_HEIGHT = 3508;
+const APP_VERSION = "20260907-storyonly1";
+const EXPORT_WIDTH = 1080;
+const EXPORT_HEIGHT = 1920;
 const AUTH_KEY = "cinemaCardAuthorized";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
-const PAUSE_HIGHLIGHT_COLORS = {
-  red: "#c8262e",
-  green: "#168b48",
-  blue: "#2468b2"
-};
-const DEFAULT_PAUSE_MESSAGE = `MOKO商場買一送一優惠券
-不適用於公眾假日,3D電影
-IMAX及以下因票價調整的電影
-MOKO shopping mall buy one get one free coupon
-not applicable on Public Holiday,3D Movie
-IMAX and the following movies with price adjustments`;
 
 const sampleMovies = [
   {
@@ -93,8 +69,6 @@ const sampleMovies = [
 
 let movies = [];
 let selectedMovie = null;
-let currentMode = "story";
-const pauseMovieIds = new Set();
 let hasLoadedMovies = false;
 
 function setStatus(message) {
@@ -117,166 +91,17 @@ function unlockApp() {
   }
 }
 
-function getSelectedPauseMovies() {
-  return movies.filter((movie) => pauseMovieIds.has(String(movie.id)));
-}
-
-function getPauseGridColumns(count) {
-  if (count <= 1) return 1;
-  if (count <= 4) return 2;
-  if (count <= 9) return 3;
-  return 4;
-}
-
 function updateCountLabel() {
-  if (currentMode === "pause") {
-    countLabel.textContent = `${getSelectedPauseMovies().length}/${movies.length} 已選`;
-  } else {
-    countLabel.textContent = `${movies.length} 套電影`;
-  }
+  countLabel.textContent = `${movies.length} 套電影`;
 }
 
 function updatePosterStates() {
   document.querySelectorAll(".poster-button").forEach((button) => {
     const id = button.dataset.id;
-    const isActive = currentMode === "pause" ? pauseMovieIds.has(id) : String(selectedMovie?.id) === id;
+    const isActive = String(selectedMovie?.id) === id;
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-pressed", isActive ? "true" : "false");
   });
-}
-
-function getPauseSegmentColor(text, baseColor) {
-  const normalized = text.toLowerCase();
-  if (normalized.includes("imax")) return PAUSE_HIGHLIGHT_COLORS.blue;
-  if (normalized.includes("3d")) return PAUSE_HIGHLIGHT_COLORS.green;
-  if (normalized.includes("public holiday") || text.includes("公眾假日")) return PAUSE_HIGHLIGHT_COLORS.red;
-  return baseColor;
-}
-
-function getPauseTextSegments(text, baseColor) {
-  const pattern = /(Public Holiday|公眾假日|3D Movie|3D電影|IMAX|3D)/gi;
-  const segments = [];
-  let lastIndex = 0;
-  let match;
-
-  while ((match = pattern.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      segments.push({ text: text.slice(lastIndex, match.index), color: baseColor });
-    }
-    segments.push({ text: match[0], color: getPauseSegmentColor(match[0], baseColor) });
-    lastIndex = pattern.lastIndex;
-  }
-
-  if (lastIndex < text.length) {
-    segments.push({ text: text.slice(lastIndex), color: baseColor });
-  }
-
-  return segments.length ? segments : [{ text: "", color: baseColor }];
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function getEstimatedPauseVisualLineCount(text) {
-  return String(text || "").split("\n").reduce((total, line) => {
-    const length = [...line].length;
-    return total + Math.max(1, Math.ceil(length / 34));
-  }, 0);
-}
-
-function updatePauseCopyAreaHeight() {
-  const lines = getEstimatedPauseVisualLineCount(pauseMessage.value || DEFAULT_PAUSE_MESSAGE);
-  const height = clamp(78 + lines * 31, 245, 630);
-  pauseCopyArea.style.flexBasis = `${height}px`;
-}
-
-function renderPauseMessagePreview() {
-  const baseColor = pauseTextColor.value;
-  pauseMessagePreview.innerHTML = "";
-
-  for (const line of String(pauseMessage.value || "").split("\n")) {
-    const lineEl = document.createElement("div");
-    lineEl.className = "pause-message-line";
-
-    if (!line) {
-      lineEl.textContent = "\u00a0";
-    } else {
-      for (const segment of getPauseTextSegments(line, baseColor)) {
-        const span = document.createElement("span");
-        span.textContent = segment.text;
-        span.style.color = segment.color;
-        lineEl.append(span);
-      }
-    }
-
-    pauseMessagePreview.append(lineEl);
-  }
-  updatePauseCopyAreaHeight();
-}
-
-function updatePauseTextColor() {
-  renderPauseMessagePreview();
-}
-
-function updatePausePreview() {
-  const selected = getSelectedPauseMovies();
-  pausePosterGrid.innerHTML = "";
-  pausePosterGrid.style.setProperty("--pause-cols", String(getPauseGridColumns(selected.length)));
-  pauseEmpty.hidden = selected.length > 0;
-
-  if (!selected.length) {
-    updateCountLabel();
-    return;
-  }
-
-  for (const movie of selected) {
-    const tile = document.createElement("div");
-    tile.className = "pause-poster-tile";
-
-    const img = document.createElement("img");
-    img.src = movie.posterUrl;
-    img.alt = movie.titleZh || movie.titleEn || "電影海報";
-    img.loading = "lazy";
-
-    tile.append(img);
-    pausePosterGrid.append(tile);
-  }
-
-  updateCountLabel();
-}
-
-function togglePauseMovie(movie) {
-  const id = String(movie.id);
-  if (pauseMovieIds.has(id)) {
-    pauseMovieIds.delete(id);
-  } else {
-    pauseMovieIds.add(id);
-  }
-  updatePausePreview();
-  updatePosterStates();
-}
-
-function setMode(mode) {
-  currentMode = mode === "pause" ? "pause" : "story";
-  document.body.dataset.mode = currentMode;
-  storyCard.hidden = currentMode !== "story";
-  pauseCard.hidden = currentMode !== "pause";
-  posterPanelTitle.textContent = currentMode === "pause" ? "選擇電影" : "點擊 Poster";
-  previewTitle.textContent = currentMode === "pause" ? "優惠暫停預覽" : "圖片預覽";
-
-  for (const button of modeButtons) {
-    const isActive = button.dataset.mode === currentMode;
-    button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-pressed", isActive ? "true" : "false");
-  }
-
-  if (currentMode === "pause" && pauseMovieIds.size === 0 && selectedMovie) {
-    pauseMovieIds.add(String(selectedMovie.id));
-  }
-
-  updatePausePreview();
-  updatePosterStates();
 }
 
 async function handleAuth(event) {
@@ -367,27 +192,16 @@ function renderMovies(list) {
     img.alt = movie.titleZh;
     img.loading = "lazy";
 
-    const mark = document.createElement("span");
-    mark.className = "poster-check";
-    mark.setAttribute("aria-hidden", "true");
-
     const label = document.createElement("span");
     label.textContent = truncate(movie.titleZh, 34);
 
-    button.append(img, mark, label);
-    button.addEventListener("click", () => {
-      if (currentMode === "pause") {
-        togglePauseMovie(movie);
-      } else {
-        selectMovie(movie);
-      }
-    });
+    button.append(img, label);
+    button.addEventListener("click", () => selectMovie(movie));
     posterGrid.append(button);
   }
 
   const existing = selectedMovie ? list.find((movie) => String(movie.id) === String(selectedMovie.id)) : null;
   if (existing || list[0]) selectMovie(existing || list[0]);
-  updatePausePreview();
   updatePosterStates();
 }
 
@@ -438,21 +252,6 @@ function drawContain(ctx, img, x, y, width, height) {
   ctx.drawImage(img, x + (width - drawW) / 2, y + (height - drawH) / 2, drawW, drawH);
 }
 
-function roundedRectPath(ctx, x, y, width, height, radius) {
-  const r = Math.min(radius, width / 2, height / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + width - r, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-  ctx.lineTo(x + width, y + height - r);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-  ctx.lineTo(x + r, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
 function getWrappedLines(ctx, text, maxWidth) {
   const lines = [];
   const paragraphs = String(text || "").split("\n");
@@ -486,129 +285,11 @@ function drawLines(ctx, lines, x, y, lineHeight) {
   return y;
 }
 
-function appendRichChar(line, color, char) {
-  const last = line[line.length - 1];
-  if (last && last.color === color) {
-    last.text += char;
-  } else {
-    line.push({ text: char, color });
-  }
-}
-
-function getRichLineWidth(ctx, line) {
-  return line.reduce((width, segment) => width + ctx.measureText(segment.text).width, 0);
-}
-
-function getWrappedRichLines(ctx, text, maxWidth, baseColor) {
-  const lines = [];
-
-  for (const paragraph of String(text || "").split("\n")) {
-    if (!paragraph) {
-      lines.push([{ text: "", color: baseColor }]);
-      continue;
-    }
-
-    let line = [];
-    let lineWidth = 0;
-
-    for (const segment of getPauseTextSegments(paragraph, baseColor)) {
-      for (const char of [...segment.text]) {
-        const charWidth = ctx.measureText(char).width;
-        if (lineWidth + charWidth > maxWidth && line.length) {
-          lines.push(line);
-          line = [];
-          lineWidth = 0;
-          if (char === " ") continue;
-        }
-        appendRichChar(line, segment.color, char);
-        lineWidth += charWidth;
-      }
-    }
-
-    lines.push(line.length ? line : [{ text: "", color: baseColor }]);
-  }
-
-  return lines.length ? lines : [[{ text: "", color: baseColor }]];
-}
-
-function ellipsizeRichLines(lines, maxLines, baseColor) {
-  if (lines.length <= maxLines) return lines;
-  const trimmed = lines.slice(0, maxLines).map((line) => line.map((segment) => ({ ...segment })));
-  const lastLine = trimmed[trimmed.length - 1] || [{ text: "", color: baseColor }];
-  const lastSegment = lastLine[lastLine.length - 1] || { text: "", color: baseColor };
-  lastSegment.text = `${lastSegment.text.replace(/…$/, "")}…`;
-  if (!lastLine.length) lastLine.push(lastSegment);
-  trimmed[trimmed.length - 1] = lastLine;
-  return trimmed;
-}
-
-function fitWrappedRichText(ctx, text, { maxWidth, maxHeight, weight, maxSize, minSize, lineHeightFactor, baseColor }) {
-  for (let size = maxSize; size >= minSize; size -= 2) {
-    setCanvasFont(ctx, weight, size);
-    const lineHeight = size * lineHeightFactor;
-    const lines = getWrappedRichLines(ctx, text, maxWidth, baseColor);
-    if (lines.length * lineHeight <= maxHeight) return { size, lineHeight, lines };
-  }
-
-  setCanvasFont(ctx, weight, minSize);
-  const lineHeight = minSize * lineHeightFactor;
-  const maxLines = Math.max(1, Math.floor(maxHeight / lineHeight));
-  return {
-    size: minSize,
-    lineHeight,
-    lines: ellipsizeRichLines(getWrappedRichLines(ctx, text, maxWidth, baseColor), maxLines, baseColor)
-  };
-}
-
-function drawRichLines(ctx, lines, centerX, y, lineHeight) {
-  ctx.textAlign = "left";
-  for (const line of lines) {
-    let x = centerX - getRichLineWidth(ctx, line) / 2;
-    for (const segment of line) {
-      if (!segment.text) continue;
-      ctx.fillStyle = segment.color;
-      ctx.fillText(segment.text, x, y);
-      x += ctx.measureText(segment.text).width;
-    }
-    y += lineHeight;
-  }
-  return y;
-}
-
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  return drawLines(ctx, getWrappedLines(ctx, text, maxWidth), x, y, lineHeight);
-}
-
 function ellipsizeLines(lines, maxLines) {
   if (lines.length <= maxLines) return lines;
   const trimmed = lines.slice(0, maxLines);
   trimmed[trimmed.length - 1] = `${trimmed[trimmed.length - 1].replace(/…$/, "")}…`;
   return trimmed;
-}
-
-function wrapTextLimited(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
-  const chars = [...String(text || "")];
-  let line = "";
-  let lines = 0;
-
-  for (let i = 0; i < chars.length; i += 1) {
-    const next = line + chars[i];
-    if (chars[i] === "\n" || ctx.measureText(next).width > maxWidth) {
-      ctx.fillText(line.trim(), x, y);
-      y += lineHeight;
-      lines += 1;
-      line = chars[i] === "\n" ? "" : chars[i];
-      if (lines >= maxLines) return y;
-    } else {
-      line = next;
-    }
-  }
-
-  if (line && lines < maxLines) {
-    ctx.fillText(line.trim(), x, y);
-    y += lineHeight;
-  }
-  return y;
 }
 
 function setCanvasFont(ctx, weight, size) {
@@ -723,186 +404,24 @@ function buildExportLayout(ctx, movie, options = {}) {
   return make(0.68, true);
 }
 
-function fitWrappedText(ctx, text, { maxWidth, maxHeight, weight, maxSize, minSize, lineHeightFactor }) {
-  for (let size = maxSize; size >= minSize; size -= 2) {
-    setCanvasFont(ctx, weight, size);
-    const lineHeight = size * lineHeightFactor;
-    const lines = getWrappedLines(ctx, text, maxWidth);
-    if (lines.length * lineHeight <= maxHeight) return { size, lineHeight, lines };
-  }
-
-  setCanvasFont(ctx, weight, minSize);
-  const lineHeight = minSize * lineHeightFactor;
-  const maxLines = Math.max(1, Math.floor(maxHeight / lineHeight));
-  return {
-    size: minSize,
-    lineHeight,
-    lines: ellipsizeLines(getWrappedLines(ctx, text, maxWidth), maxLines)
-  };
-}
-
-function getPausePosterLayout(count, width, height) {
-  let best = null;
-
-  for (let cols = 1; cols <= Math.min(count, 6); cols += 1) {
-    const rows = Math.ceil(count / cols);
-    const baseGap = cols >= 5 || rows >= 4 ? 0.022 : 0.03;
-    const gap = Math.round(clamp(Math.min(width, height) * baseGap, 18, 78));
-    const cellWidth = (width - (cols - 1) * gap) / cols;
-    const cellHeight = (height - (rows - 1) * gap) / rows;
-    let posterWidth = Math.min(cellWidth, cellHeight * (2 / 3));
-    let posterHeight = posterWidth * 1.5;
-
-    if (posterHeight > cellHeight) {
-      posterHeight = cellHeight;
-      posterWidth = posterHeight * (2 / 3);
-    }
-
-    const posterArea = posterWidth * posterHeight;
-    if (!best || posterArea > best.posterArea) {
-      best = { cols, rows, gap, posterWidth, posterHeight, posterArea };
-    }
-  }
-
-  return best;
-}
-
-function getPauseNoticeLayout(ctx, message, baseColor, posterCount) {
-  const box = { x: 198, y: 132, width: 2084 };
-  const textWidth = 1810;
-  const minPosterHeight = posterCount <= 4 ? 1180 : 900;
-  const bottomMargin = 140;
-  const boxPosterGap = 110;
-  const maxBoxHeight = PAUSE_EXPORT_HEIGHT - box.y - boxPosterGap - minPosterHeight - bottomMargin;
-  const size = 104;
-  const lineHeight = size * 1.28;
-
-  setCanvasFont(ctx, 800, size);
-  const allLines = getWrappedRichLines(ctx, message, textWidth, baseColor);
-  const verticalPadding = 270;
-  const maxLines = Math.max(1, Math.floor((maxBoxHeight - verticalPadding) / lineHeight));
-  const lines = allLines.length > maxLines ? ellipsizeRichLines(allLines, maxLines, baseColor) : allLines;
-  const textHeight = lines.length * lineHeight;
-  const boxHeight = clamp(textHeight + verticalPadding, 760, maxBoxHeight);
-  const posterAreaY = box.y + boxHeight + boxPosterGap;
-
-  return {
-    box: { ...box, height: boxHeight },
-    text: { size, lineHeight, lines, textHeight, centerY: box.y + boxHeight / 2 },
-    posterArea: { x: 170, y: posterAreaY, width: PAUSE_EXPORT_WIDTH - 340, height: PAUSE_EXPORT_HEIGHT - posterAreaY - bottomMargin }
-  };
-}
-
-function drawPosterFallback(ctx, movie, x, y, width, height) {
-  ctx.save();
-  ctx.fillStyle = "#f6f2ec";
-  ctx.fillRect(x, y, width, height);
-  ctx.strokeStyle = "#ded9d2";
-  ctx.lineWidth = 3;
-  ctx.strokeRect(x, y, width, height);
-
-  ctx.fillStyle = "#555555";
-  ctx.textAlign = "center";
-  setCanvasFont(ctx, 700, 24);
-  const title = movie.titleZh || movie.titleEn || "電影海報";
-  const lines = ellipsizeLines(getWrappedLines(ctx, title, width - 32), 3);
-  const lineHeight = 32;
-  const startY = y + height / 2 - ((lines.length - 1) * lineHeight) / 2 + 8;
-  drawLines(ctx, lines, x + width / 2, startY, lineHeight);
-  ctx.restore();
-}
-
-function drawPosterTile(ctx, img, movie, x, y, width, height) {
-  ctx.save();
-  ctx.shadowColor = "rgba(0, 0, 0, 0.18)";
-  ctx.shadowBlur = 22;
-  ctx.shadowOffsetY = 10;
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(x, y, width, height);
-  ctx.restore();
-
-  if (img) {
-    drawContain(ctx, img, x, y, width, height);
-  } else {
-    drawPosterFallback(ctx, movie, x, y, width, height);
-  }
-
-  ctx.strokeStyle = "#e4ded6";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x + 1, y + 1, width - 2, height - 2);
-}
-
-async function makePauseCanvas() {
-  const selectedMovies = getSelectedPauseMovies();
-  if (!selectedMovies.length) throw new Error("請先選擇至少一套電影。");
-
-  const canvas = document.createElement("canvas");
-  canvas.width = PAUSE_EXPORT_WIDTH;
-  canvas.height = PAUSE_EXPORT_HEIGHT;
-  const ctx = canvas.getContext("2d");
-  const message = pauseMessage.value.trim() || DEFAULT_PAUSE_MESSAGE;
-  const posterImages = await Promise.all(selectedMovies.map(async (movie) => {
-    try {
-      return await loadImage(movie.posterUrl);
-    } catch {
-      return null;
-    }
-  }));
-
-  const pauseLayout = getPauseNoticeLayout(ctx, message, pauseTextColor.value, selectedMovies.length);
-
-  ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, PAUSE_EXPORT_WIDTH, PAUSE_EXPORT_HEIGHT);
-
-  const infoBox = pauseLayout.box;
-  roundedRectPath(ctx, infoBox.x, infoBox.y, infoBox.width, infoBox.height, 168);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.42)";
-  ctx.fill();
-  ctx.strokeStyle = "#2b2b2b";
-  ctx.lineWidth = 7;
-  ctx.stroke();
-
-  const topText = pauseLayout.text;
-  setCanvasFont(ctx, 800, topText.size);
-  drawRichLines(ctx, topText.lines, PAUSE_EXPORT_WIDTH / 2, topText.centerY - topText.textHeight / 2 + topText.size, topText.lineHeight);
-  ctx.textAlign = "left";
-
-  const posterArea = pauseLayout.posterArea;
-  const layout = getPausePosterLayout(selectedMovies.length, posterArea.width, posterArea.height);
-  const gridWidth = layout.cols * layout.posterWidth + (layout.cols - 1) * layout.gap;
-  const gridHeight = layout.rows * layout.posterHeight + (layout.rows - 1) * layout.gap;
-  const startX = posterArea.x + (posterArea.width - gridWidth) / 2;
-  const startY = posterArea.y + (posterArea.height - gridHeight) / 2;
-
-  selectedMovies.forEach((movie, index) => {
-    const col = index % layout.cols;
-    const row = Math.floor(index / layout.cols);
-    const posterX = startX + col * (layout.posterWidth + layout.gap);
-    const posterY = startY + row * (layout.posterHeight + layout.gap);
-    drawPosterTile(ctx, posterImages[index], movie, posterX, posterY, layout.posterWidth, layout.posterHeight);
-  });
-
-  return canvas;
-}
-
 async function makeStoryCanvas() {
   if (!selectedMovie) throw new Error("未揀電影");
 
   const canvas = document.createElement("canvas");
-  canvas.width = STORY_EXPORT_WIDTH;
-  canvas.height = STORY_EXPORT_HEIGHT;
+  canvas.width = EXPORT_WIDTH;
+  canvas.height = EXPORT_HEIGHT;
   const ctx = canvas.getContext("2d");
   const layout = buildExportLayout(ctx, selectedMovie);
   const img = await loadImage(selectedMovie.posterUrl);
 
   ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, STORY_EXPORT_WIDTH, STORY_EXPORT_HEIGHT);
-  drawContain(ctx, img, 0, 0, STORY_EXPORT_WIDTH, 760);
+  ctx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
+  drawContain(ctx, img, 0, 0, EXPORT_WIDTH, 760);
 
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 760, STORY_EXPORT_WIDTH, 1160);
+  ctx.fillRect(0, 760, EXPORT_WIDTH, 1160);
   ctx.fillStyle = "#b82435";
-  ctx.fillRect(0, 760, STORY_EXPORT_WIDTH, 12);
+  ctx.fillRect(0, 760, EXPORT_WIDTH, 12);
 
   const x = 74;
   let y = 830;
@@ -954,17 +473,13 @@ async function makeStoryCanvas() {
   return canvas;
 }
 
-async function makeCanvas() {
-  return currentMode === "pause" ? makePauseCanvas() : makeStoryCanvas();
-}
-
 function canvasToBlob(canvas) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png", 0.96));
 }
 
 async function copyImage() {
   setStatus("正在製作圖片...");
-  const canvas = await makeCanvas();
+  const canvas = await makeStoryCanvas();
   const blob = await canvasToBlob(canvas);
   if (!navigator.clipboard || !window.ClipboardItem) {
     downloadBlob(blob);
@@ -983,9 +498,7 @@ async function copyImage() {
 function downloadBlob(blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const rawName = currentMode === "pause"
-    ? `優惠暫停-${new Date().toISOString().slice(0, 10)}`
-    : selectedMovie?.titleEn || selectedMovie?.titleZh || "movie";
+  const rawName = selectedMovie?.titleEn || selectedMovie?.titleZh || "movie";
   const name = rawName.replace(/[^\w\u4e00-\u9fff]+/g, "-");
   a.href = url;
   a.download = `${name}.png`;
@@ -995,7 +508,7 @@ function downloadBlob(blob) {
 
 async function downloadImage() {
   setStatus("正在輸出 PNG...");
-  const canvas = await makeCanvas();
+  const canvas = await makeStoryCanvas();
   const blob = await canvasToBlob(canvas);
   downloadBlob(blob);
   setStatus("PNG 已下載。");
@@ -1004,19 +517,11 @@ async function downloadImage() {
 refreshBtn.addEventListener("click", loadMovies);
 copyBtn.addEventListener("click", () => copyImage().catch((error) => setStatus(`複製失敗：${error.message}`)));
 downloadBtn.addEventListener("click", () => downloadImage().catch((error) => setStatus(`下載失敗：${error.message}`)));
-pauseTextColor.addEventListener("input", updatePauseTextColor);
-pauseMessage.addEventListener("input", renderPauseMessagePreview);
-for (const button of modeButtons) {
-  button.addEventListener("click", () => setMode(button.dataset.mode));
-}
 authForm.addEventListener("submit", (event) => {
   handleAuth(event).catch(() => {
     authError.textContent = "密碼驗證失敗。";
   });
 });
-
-updatePauseTextColor();
-setMode("story");
 
 if (localStorage.getItem(AUTH_KEY) === "1") {
   unlockApp();
