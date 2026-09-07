@@ -3,13 +3,21 @@ const authScreen = document.querySelector("#authScreen");
 const authForm = document.querySelector("#authForm");
 const passwordInput = document.querySelector("#passwordInput");
 const authError = document.querySelector("#authError");
+const modeButtons = document.querySelectorAll("[data-mode]");
 const posterGrid = document.querySelector("#posterGrid");
 const countLabel = document.querySelector("#countLabel");
+const posterPanelTitle = document.querySelector("#posterPanelTitle");
+const previewTitle = document.querySelector("#previewTitle");
 const refreshBtn = document.querySelector("#refreshBtn");
 const copyBtn = document.querySelector("#copyBtn");
 const downloadBtn = document.querySelector("#downloadBtn");
 const statusEl = document.querySelector("#status");
 
+const storyCard = document.querySelector("#card");
+const pauseCard = document.querySelector("#pauseCard");
+const pauseMessage = document.querySelector("#pauseMessage");
+const pauseMovieList = document.querySelector("#pauseMovieList");
+const pauseSelectedCount = document.querySelector("#pauseSelectedCount");
 const cardPoster = document.querySelector("#cardPoster");
 const cardMeta = document.querySelector("#cardMeta");
 const titleZh = document.querySelector("#titleZh");
@@ -21,7 +29,7 @@ const creditsEnLine = document.querySelector("#creditsEnLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260906-password1";
+const APP_VERSION = "20260907-pause1";
 const AUTH_KEY = "cinemaCardAuthorized";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
 
@@ -68,6 +76,8 @@ const sampleMovies = [
 
 let movies = [];
 let selectedMovie = null;
+let currentMode = "story";
+const pauseMovieIds = new Set();
 let hasLoadedMovies = false;
 
 function setStatus(message) {
@@ -88,6 +98,94 @@ function unlockApp() {
     hasLoadedMovies = true;
     loadMovies();
   }
+}
+
+function getSelectedPauseMovies() {
+  return movies.filter((movie) => pauseMovieIds.has(String(movie.id)));
+}
+
+function updateCountLabel() {
+  if (currentMode === "pause") {
+    countLabel.textContent = `${getSelectedPauseMovies().length}/${movies.length} 已選`;
+  } else {
+    countLabel.textContent = `${movies.length} 套電影`;
+  }
+}
+
+function updatePosterStates() {
+  document.querySelectorAll(".poster-button").forEach((button) => {
+    const id = button.dataset.id;
+    const isActive = currentMode === "pause" ? pauseMovieIds.has(id) : String(selectedMovie?.id) === id;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+}
+
+function updatePausePreview() {
+  const selected = getSelectedPauseMovies();
+  pauseSelectedCount.textContent = `${selected.length} 套電影`;
+  pauseMovieList.innerHTML = "";
+
+  if (!selected.length) {
+    const item = document.createElement("li");
+    item.className = "pause-empty";
+    item.textContent = "未選擇電影";
+    pauseMovieList.append(item);
+    updateCountLabel();
+    return;
+  }
+
+  for (const movie of selected) {
+    const item = document.createElement("li");
+    const title = document.createElement("span");
+    title.className = "pause-movie-title";
+    title.textContent = movie.titleZh || movie.titleEn;
+    item.append(title);
+
+    if (movie.titleEn && movie.titleEn !== movie.titleZh) {
+      const titleEnEl = document.createElement("span");
+      titleEnEl.className = "pause-movie-en";
+      titleEnEl.textContent = movie.titleEn;
+      item.append(titleEnEl);
+    }
+
+    pauseMovieList.append(item);
+  }
+
+  updateCountLabel();
+}
+
+function togglePauseMovie(movie) {
+  const id = String(movie.id);
+  if (pauseMovieIds.has(id)) {
+    pauseMovieIds.delete(id);
+  } else {
+    pauseMovieIds.add(id);
+  }
+  updatePausePreview();
+  updatePosterStates();
+}
+
+function setMode(mode) {
+  currentMode = mode === "pause" ? "pause" : "story";
+  document.body.dataset.mode = currentMode;
+  storyCard.hidden = currentMode !== "story";
+  pauseCard.hidden = currentMode !== "pause";
+  posterPanelTitle.textContent = currentMode === "pause" ? "選擇電影" : "點擊 Poster";
+  previewTitle.textContent = currentMode === "pause" ? "優惠暫停預覽" : "圖片預覽";
+
+  for (const button of modeButtons) {
+    const isActive = button.dataset.mode === currentMode;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  }
+
+  if (currentMode === "pause" && pauseMovieIds.size === 0 && selectedMovie) {
+    pauseMovieIds.add(String(selectedMovie.id));
+  }
+
+  updatePausePreview();
+  updatePosterStates();
 }
 
 async function handleAuth(event) {
@@ -161,36 +259,46 @@ function selectMovie(movie) {
   creditsEnLine.textContent = creditSections.en.join("\n");
   creditsEnLine.hidden = creditSections.en.length === 0;
   sourceLine.textContent = "Source: cinema.com.hk";
-
-  document.querySelectorAll(".poster-button").forEach((button) => {
-    button.classList.toggle("is-active", String(button.dataset.id) === String(movie.id));
-  });
+  updatePosterStates();
 }
 
 function renderMovies(list) {
   posterGrid.innerHTML = "";
-  countLabel.textContent = `${list.length} 套電影`;
 
   for (const movie of list) {
     const button = document.createElement("button");
     button.className = "poster-button";
     button.dataset.id = movie.id;
     button.type = "button";
+    button.setAttribute("aria-pressed", "false");
 
     const img = document.createElement("img");
     img.src = movie.posterUrl;
     img.alt = movie.titleZh;
     img.loading = "lazy";
 
+    const mark = document.createElement("span");
+    mark.className = "poster-check";
+    mark.setAttribute("aria-hidden", "true");
+
     const label = document.createElement("span");
     label.textContent = truncate(movie.titleZh, 34);
 
-    button.append(img, label);
-    button.addEventListener("click", () => selectMovie(movie));
+    button.append(img, mark, label);
+    button.addEventListener("click", () => {
+      if (currentMode === "pause") {
+        togglePauseMovie(movie);
+      } else {
+        selectMovie(movie);
+      }
+    });
     posterGrid.append(button);
   }
 
-  if (list[0]) selectMovie(list[0]);
+  const existing = selectedMovie ? list.find((movie) => String(movie.id) === String(selectedMovie.id)) : null;
+  if (existing || list[0]) selectMovie(existing || list[0]);
+  updatePausePreview();
+  updatePosterStates();
 }
 
 async function loadMovies() {
@@ -420,7 +528,123 @@ function buildExportLayout(ctx, movie) {
   return make(0.68, true);
 }
 
-async function makeCanvas() {
+function fitWrappedText(ctx, text, { maxWidth, maxHeight, weight, maxSize, minSize, lineHeightFactor }) {
+  for (let size = maxSize; size >= minSize; size -= 2) {
+    setCanvasFont(ctx, weight, size);
+    const lineHeight = size * lineHeightFactor;
+    const lines = getWrappedLines(ctx, text, maxWidth);
+    if (lines.length * lineHeight <= maxHeight) return { size, lineHeight, lines };
+  }
+
+  setCanvasFont(ctx, weight, minSize);
+  const lineHeight = minSize * lineHeightFactor;
+  const maxLines = Math.max(1, Math.floor(maxHeight / lineHeight));
+  return {
+    size: minSize,
+    lineHeight,
+    lines: ellipsizeLines(getWrappedLines(ctx, text, maxWidth), maxLines)
+  };
+}
+
+function buildPauseMovieText(movie) {
+  const title = movie.titleZh || movie.titleEn || "未命名電影";
+  if (movie.titleEn && movie.titleEn !== movie.titleZh) return `${title} / ${movie.titleEn}`;
+  return title;
+}
+
+function buildPauseListLayout(ctx, selectedMovies, maxWidth, maxHeight) {
+  for (let size = 32; size >= 22; size -= 2) {
+    setCanvasFont(ctx, 700, size);
+    const lineHeight = size * 1.35;
+    const gap = size * 0.55;
+    const blocks = selectedMovies.map((movie) => ellipsizeLines(getWrappedLines(ctx, `• ${buildPauseMovieText(movie)}`, maxWidth), 2));
+    const height = blocks.reduce((total, block) => total + block.length * lineHeight, 0) + Math.max(0, blocks.length - 1) * gap;
+    if (height <= maxHeight) return { size, lineHeight, gap, blocks };
+  }
+
+  const size = 22;
+  const lineHeight = size * 1.35;
+  const gap = size * 0.55;
+  setCanvasFont(ctx, 700, size);
+  const blocks = [];
+  let usedHeight = 0;
+
+  for (const movie of selectedMovies) {
+    const block = ellipsizeLines(getWrappedLines(ctx, `• ${buildPauseMovieText(movie)}`, maxWidth), 2);
+    const nextHeight = block.length * lineHeight + (blocks.length ? gap : 0);
+    if (usedHeight + nextHeight > maxHeight) break;
+    blocks.push(block);
+    usedHeight += nextHeight;
+  }
+
+  if (blocks.length < selectedMovies.length && blocks.length) {
+    const lastBlock = blocks[blocks.length - 1];
+    lastBlock[lastBlock.length - 1] = `${lastBlock[lastBlock.length - 1].replace(/…$/, "")}…`;
+  }
+
+  return { size, lineHeight, gap, blocks };
+}
+
+function drawLineBlocks(ctx, blocks, x, y, lineHeight, gap) {
+  for (const block of blocks) {
+    y = drawLines(ctx, block, x, y, lineHeight) + gap;
+  }
+  return y;
+}
+
+async function makePauseCanvas() {
+  const selectedMovies = getSelectedPauseMovies();
+  if (!selectedMovies.length) throw new Error("請先選擇至少一套電影。");
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext("2d");
+  const message = pauseMessage.value.trim() || "優惠暫停";
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#f8f4ed";
+  ctx.fillRect(0, 0, canvas.width, 960);
+
+  const topText = fitWrappedText(ctx, message, {
+    maxWidth: 880,
+    maxHeight: 620,
+    weight: 800,
+    maxSize: 76,
+    minSize: 34,
+    lineHeightFactor: 1.25
+  });
+  ctx.fillStyle = "#171717";
+  ctx.textAlign = "center";
+  setCanvasFont(ctx, 800, topText.size);
+  const topTextHeight = topText.lines.length * topText.lineHeight;
+  drawLines(ctx, topText.lines, 540, 480 - topTextHeight / 2 + topText.size, topText.lineHeight);
+  ctx.textAlign = "left";
+
+  ctx.fillStyle = "#b82435";
+  ctx.fillRect(0, 960, 1080, 12);
+
+  const x = 74;
+  ctx.fillStyle = "#171717";
+  setCanvasFont(ctx, 800, 48);
+  ctx.fillText("優惠暫停電影", x, 1064);
+  ctx.fillStyle = "#777777";
+  setCanvasFont(ctx, 700, 25);
+  ctx.fillText(`${selectedMovies.length} 套電影`, x, 1106);
+
+  const listLayout = buildPauseListLayout(ctx, selectedMovies, 932, 610);
+  ctx.fillStyle = "#2b2b2b";
+  setCanvasFont(ctx, 700, listLayout.size);
+  drawLineBlocks(ctx, listLayout.blocks, x, 1172, listLayout.lineHeight, listLayout.gap);
+
+  ctx.fillStyle = "#777777";
+  setCanvasFont(ctx, 400, 22);
+  ctx.fillText("Source: cinema.com.hk", x, 1874);
+  return canvas;
+}
+
+async function makeStoryCanvas() {
   if (!selectedMovie) throw new Error("未揀電影");
 
   const canvas = document.createElement("canvas");
@@ -492,6 +716,10 @@ async function makeCanvas() {
   return canvas;
 }
 
+async function makeCanvas() {
+  return currentMode === "pause" ? makePauseCanvas() : makeStoryCanvas();
+}
+
 function canvasToBlob(canvas) {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png", 0.96));
 }
@@ -517,7 +745,10 @@ async function copyImage() {
 function downloadBlob(blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const name = (selectedMovie?.titleEn || selectedMovie?.titleZh || "movie").replace(/[^\w\u4e00-\u9fff]+/g, "-");
+  const rawName = currentMode === "pause"
+    ? `優惠暫停-${new Date().toISOString().slice(0, 10)}`
+    : selectedMovie?.titleEn || selectedMovie?.titleZh || "movie";
+  const name = rawName.replace(/[^\w\u4e00-\u9fff]+/g, "-");
   a.href = url;
   a.download = `${name}.png`;
   a.click();
@@ -535,11 +766,16 @@ async function downloadImage() {
 refreshBtn.addEventListener("click", loadMovies);
 copyBtn.addEventListener("click", () => copyImage().catch((error) => setStatus(`複製失敗：${error.message}`)));
 downloadBtn.addEventListener("click", () => downloadImage().catch((error) => setStatus(`下載失敗：${error.message}`)));
+for (const button of modeButtons) {
+  button.addEventListener("click", () => setMode(button.dataset.mode));
+}
 authForm.addEventListener("submit", (event) => {
   handleAuth(event).catch(() => {
     authError.textContent = "密碼驗證失敗。";
   });
 });
+
+setMode("story");
 
 if (localStorage.getItem(AUTH_KEY) === "1") {
   unlockApp();

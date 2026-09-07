@@ -27,7 +27,8 @@ body.is-locked {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -48,6 +49,10 @@ button:hover {
 
 button.secondary {
   background: #1f1f1f;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 .app {
@@ -96,6 +101,29 @@ h1 {
   align-items: end;
   flex-wrap: wrap;
   justify-content: end;
+}
+
+.mode-switch {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.mode-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.mode-button:hover,
+.mode-button.is-active {
+  background: var(--accent);
+  color: #fff;
 }
 
 label {
@@ -214,6 +242,7 @@ body.is-locked .app {
 }
 
 .poster-button {
+  position: relative;
   display: grid;
   gap: 8px;
   border: 0;
@@ -239,6 +268,35 @@ body.is-locked .app {
 
 .poster-button.is-active img {
   outline: 4px solid var(--gold);
+}
+
+.poster-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  display: none;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.86);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+body[data-mode="pause"] .poster-check {
+  display: grid;
+}
+
+.poster-button.is-active .poster-check {
+  background: var(--accent);
+}
+
+.poster-button.is-active .poster-check::before {
+  content: "✓";
 }
 
 .poster-button span {
@@ -333,6 +391,111 @@ body.is-locked .app {
   font-size: 11px;
 }
 
+.pause-card {
+  aspect-ratio: 9 / 16;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  overflow: hidden;
+}
+
+.pause-copy-area {
+  display: grid;
+  align-items: center;
+  padding: 34px;
+  border-bottom: 6px solid var(--accent);
+  background: #fff;
+}
+
+.pause-copy-area textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  resize: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: center;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.pause-list-area {
+  padding: 24px 26px 28px;
+  overflow: hidden;
+}
+
+.pause-list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pause-list-head h2 {
+  margin-bottom: 0;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+#pauseSelectedCount {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pause-movie-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pause-movie-list li {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.pause-movie-list li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.pause-movie-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.28;
+}
+
+.pause-movie-en {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.pause-empty {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .status {
   min-height: 18px;
   margin: 14px auto 0;
@@ -371,6 +534,10 @@ body.is-locked .app {
     flex-wrap: wrap;
     justify-content: end;
   }
+
+  .mode-switch {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 560px) {
@@ -397,6 +564,22 @@ body.is-locked .app {
   }
 
   .card-body {
+    padding: 20px;
+  }
+
+  .mode-button {
+    flex: 1;
+  }
+
+  .pause-copy-area {
+    padding: 24px;
+  }
+
+  .pause-copy-area textarea {
+    font-size: 26px;
+  }
+
+  .pause-list-area {
     padding: 20px;
   }
 }
