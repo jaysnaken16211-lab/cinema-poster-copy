@@ -29,9 +29,15 @@ const creditsEnLine = document.querySelector("#creditsEnLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-pauseposters1";
+const APP_VERSION = "20260907-pauseterms1";
 const AUTH_KEY = "cinemaCardAuthorized";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
+const DEFAULT_PAUSE_MESSAGE = `MOKO商場買一送一優惠券
+不適用於公眾假日,3D電影
+IMAX及以下因票價調整的電影
+MOKO shopping mall buy one get one free coupon
+not applicable on Public Holiday,3D Movie
+IMAX and the following movies with price adjustments`;
 
 const sampleMovies = [
   {
@@ -348,6 +354,21 @@ function drawContain(ctx, img, x, y, width, height) {
   ctx.drawImage(img, x + (width - drawW) / 2, y + (height - drawH) / 2, drawW, drawH);
 }
 
+function roundedRectPath(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
 function getWrappedLines(ctx, text, maxWidth) {
   const lines = [];
   const paragraphs = String(text || "").split("\n");
@@ -618,7 +639,7 @@ async function makePauseCanvas() {
   canvas.width = 1080;
   canvas.height = 1920;
   const ctx = canvas.getContext("2d");
-  const message = pauseMessage.value.trim() || "優惠暫停";
+  const message = pauseMessage.value.trim() || DEFAULT_PAUSE_MESSAGE;
   const posterImages = await Promise.all(selectedMovies.map(async (movie) => {
     try {
       return await loadImage(movie.posterUrl);
@@ -630,28 +651,36 @@ async function makePauseCanvas() {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, canvas.width, 960);
+  ctx.fillRect(0, 0, canvas.width, 840);
+
+  const infoBox = { x: 110, y: 86, width: 860, height: 680 };
+  roundedRectPath(ctx, infoBox.x, infoBox.y, infoBox.width, infoBox.height, 92);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.42)";
+  ctx.fill();
+  ctx.strokeStyle = "#2b2b2b";
+  ctx.lineWidth = 3;
+  ctx.stroke();
 
   const topText = fitWrappedText(ctx, message, {
-    maxWidth: 880,
-    maxHeight: 620,
+    maxWidth: 760,
+    maxHeight: 520,
     weight: 800,
-    maxSize: 76,
-    minSize: 34,
-    lineHeightFactor: 1.25
+    maxSize: 46,
+    minSize: 24,
+    lineHeightFactor: 1.32
   });
   ctx.fillStyle = "#171717";
   ctx.textAlign = "center";
   setCanvasFont(ctx, 800, topText.size);
   const topTextHeight = topText.lines.length * topText.lineHeight;
-  drawLines(ctx, topText.lines, 540, 480 - topTextHeight / 2 + topText.size, topText.lineHeight);
+  drawLines(ctx, topText.lines, 540, infoBox.y + infoBox.height / 2 - topTextHeight / 2 + topText.size, topText.lineHeight);
   ctx.textAlign = "left";
 
   ctx.fillStyle = "#b82435";
-  ctx.fillRect(0, 960, 1080, 12);
+  ctx.fillRect(0, 840, 1080, 12);
 
   const x = 74;
-  const posterArea = { x, y: 1018, width: 932, height: 790 };
+  const posterArea = { x, y: 900, width: 932, height: 850 };
   const layout = getPausePosterLayout(selectedMovies.length, posterArea.width, posterArea.height);
   const gridWidth = layout.cols * layout.posterWidth + (layout.cols - 1) * layout.gap;
   const gridHeight = layout.rows * layout.posterHeight + (layout.rows - 1) * layout.gap;
