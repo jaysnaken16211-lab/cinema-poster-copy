@@ -20,10 +20,9 @@ const titleEn = document.querySelector("#titleEn");
 const synopsisEn = document.querySelector("#synopsisEn");
 const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
-const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-layout1";
+const APP_VERSION = "20260907-clean1";
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
 const EXPORT_SCALE = 2;
@@ -165,7 +164,6 @@ function selectMovie(movie) {
   creditsZhLine.hidden = creditSections.zh.length === 0;
   creditsEnLine.textContent = creditSections.en.join("\n");
   creditsEnLine.hidden = creditSections.en.length === 0;
-  sourceLine.textContent = "Source: cinema.com.hk";
 
   document.querySelectorAll(".poster-button").forEach((button) => {
     button.classList.toggle("is-active", String(button.dataset.id) === String(movie.id));
@@ -450,8 +448,6 @@ async function makeCanvas() {
     drawContain(ctx, img, 0, 0, CARD_WIDTH, 760);
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 760, CARD_WIDTH, 1160);
-    ctx.fillStyle = "#b82435";
-    ctx.fillRect(0, 760, CARD_WIDTH, 12);
   }
 
   const x = 74;
@@ -501,9 +497,6 @@ async function makeCanvas() {
     drawLines(ctx, layout.enCreditLines, x, y, layout.lineHeights.credits);
   }
 
-  ctx.fillStyle = "#777";
-  setCanvasFont(ctx, 400, 22);
-  ctx.fillText("Source: cinema.com.hk", x, 1874);
   return canvas;
 }
 

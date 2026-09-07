@@ -370,12 +370,6 @@ body.is-locked .app {
   margin: 20px 0;
 }
 
-.source-line {
-  margin: 20px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-}
-
 .status {
   min-height: 18px;
   margin: 14px auto 0;
