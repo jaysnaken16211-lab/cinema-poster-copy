@@ -1,8 +1,3 @@
-const appShell = document.querySelector("#appShell");
-const authScreen = document.querySelector("#authScreen");
-const authForm = document.querySelector("#authForm");
-const passwordInput = document.querySelector("#passwordInput");
-const authError = document.querySelector("#authError");
 const posterGrid = document.querySelector("#posterGrid");
 const countLabel = document.querySelector("#countLabel");
 const refreshBtn = document.querySelector("#refreshBtn");
@@ -18,13 +13,10 @@ const titleEn = document.querySelector("#titleEn");
 const synopsisEn = document.querySelector("#synopsisEn");
 const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
+const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-storyonly2";
-const EXPORT_WIDTH = 1080;
-const EXPORT_HEIGHT = 1920;
-const AUTH_KEY = "cinemaCardAuthorized";
-const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
+const APP_VERSION = "20260905-credits4";
 
 const sampleMovies = [
   {
@@ -69,60 +61,9 @@ const sampleMovies = [
 
 let movies = [];
 let selectedMovie = null;
-let hasLoadedMovies = false;
 
 function setStatus(message) {
   statusEl.textContent = message;
-}
-
-async function sha256Hex(value) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-}
-
-function unlockApp() {
-  document.body.classList.remove("is-locked");
-  appShell.removeAttribute("aria-hidden");
-  authScreen.hidden = true;
-  if (!hasLoadedMovies) {
-    hasLoadedMovies = true;
-    loadMovies();
-  }
-}
-
-function updateCountLabel() {
-  countLabel.textContent = `${movies.length} 套電影`;
-}
-
-function updatePosterStates() {
-  document.querySelectorAll(".poster-button").forEach((button) => {
-    const id = button.dataset.id;
-    const isActive = String(selectedMovie?.id) === id;
-    button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-pressed", isActive ? "true" : "false");
-  });
-}
-
-async function handleAuth(event) {
-  event.preventDefault();
-  authError.textContent = "";
-
-  if (!globalThis.crypto?.subtle) {
-    authError.textContent = "此瀏覽器未支援密碼驗證。";
-    return;
-  }
-
-  const hash = await sha256Hex(passwordInput.value);
-  if (hash !== PASSWORD_HASH) {
-    authError.textContent = "密碼不正確。";
-    passwordInput.select();
-    return;
-  }
-
-  localStorage.setItem(AUTH_KEY, "1");
-  passwordInput.value = "";
-  unlockApp();
 }
 
 function truncate(text, max) {
@@ -174,18 +115,22 @@ function selectMovie(movie) {
   creditsZhLine.hidden = creditSections.zh.length === 0;
   creditsEnLine.textContent = creditSections.en.join("\n");
   creditsEnLine.hidden = creditSections.en.length === 0;
-  updatePosterStates();
+  sourceLine.textContent = "Source: cinema.com.hk";
+
+  document.querySelectorAll(".poster-button").forEach((button) => {
+    button.classList.toggle("is-active", String(button.dataset.id) === String(movie.id));
+  });
 }
 
 function renderMovies(list) {
   posterGrid.innerHTML = "";
+  countLabel.textContent = `${list.length} 套電影`;
 
   for (const movie of list) {
     const button = document.createElement("button");
     button.className = "poster-button";
     button.dataset.id = movie.id;
     button.type = "button";
-    button.setAttribute("aria-pressed", "false");
 
     const img = document.createElement("img");
     img.src = movie.posterUrl;
@@ -200,9 +145,7 @@ function renderMovies(list) {
     posterGrid.append(button);
   }
 
-  const existing = selectedMovie ? list.find((movie) => String(movie.id) === String(selectedMovie.id)) : null;
-  if (existing || list[0]) selectMovie(existing || list[0]);
-  updatePosterStates();
+  if (list[0]) selectMovie(list[0]);
 }
 
 async function loadMovies() {
@@ -285,6 +228,10 @@ function drawLines(ctx, lines, x, y, lineHeight) {
   return y;
 }
 
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  return drawLines(ctx, getWrappedLines(ctx, text, maxWidth), x, y, lineHeight);
+}
+
 function ellipsizeLines(lines, maxLines) {
   if (lines.length <= maxLines) return lines;
   const trimmed = lines.slice(0, maxLines);
@@ -292,48 +239,71 @@ function ellipsizeLines(lines, maxLines) {
   return trimmed;
 }
 
+function wrapTextLimited(ctx, text, x, y, maxWidth, lineHeight, maxLines) {
+  const chars = [...String(text || "")];
+  let line = "";
+  let lines = 0;
+
+  for (let i = 0; i < chars.length; i += 1) {
+    const next = line + chars[i];
+    if (chars[i] === "\n" || ctx.measureText(next).width > maxWidth) {
+      ctx.fillText(line.trim(), x, y);
+      y += lineHeight;
+      lines += 1;
+      line = chars[i] === "\n" ? "" : chars[i];
+      if (lines >= maxLines) return y;
+    } else {
+      line = next;
+    }
+  }
+
+  if (line && lines < maxLines) {
+    ctx.fillText(line.trim(), x, y);
+    y += lineHeight;
+  }
+  return y;
+}
+
 function setCanvasFont(ctx, weight, size) {
   ctx.font = `${weight} ${Math.round(size)}px Arial, sans-serif`;
 }
 
-function buildExportLayout(ctx, movie, options = {}) {
-  const maxWidth = options.maxWidth || 932;
-  const bottom = options.bottom || 1830;
-  const startY = options.startY || 830;
-  const baseScale = options.baseScale || 1;
+function buildExportLayout(ctx, movie) {
+  const maxWidth = 932;
+  const bottom = 1830;
   const metaLines = buildMetaLines(movie);
+  const metaLineHeight = 34;
   const creditSections = buildCreditSections(movie);
+  const creditLineHeight = 33;
   const synopsisZh = movie.synopsisZh || "暫時未有中文故事簡介。";
   const synopsisEn = movie.synopsisEn || "English synopsis is not available yet.";
 
   function make(scale, clamp) {
-    const drawScale = baseScale * scale;
     const sizes = {
-      meta: 26 * drawScale,
-      titleZh: 56 * drawScale,
-      synopsisZh: 32 * drawScale,
-      titleEn: 38 * drawScale,
-      synopsisEn: 28 * drawScale,
-      credits: 24 * drawScale
+      meta: 26 * scale,
+      titleZh: 56 * scale,
+      synopsisZh: 32 * scale,
+      titleEn: 38 * scale,
+      synopsisEn: 28 * scale,
+      credits: 24 * scale
     };
     const lineHeights = {
-      meta: 34 * drawScale,
-      titleZh: 64 * drawScale,
-      synopsisZh: 50 * drawScale,
-      titleEn: 46 * drawScale,
-      synopsisEn: 40 * drawScale,
-      credits: 33 * drawScale
+      titleZh: 64 * scale,
+      synopsisZh: 50 * scale,
+      titleEn: 46 * scale,
+      synopsisEn: 40 * scale,
+      credits: creditLineHeight * scale
     };
 
     setCanvasFont(ctx, 700, sizes.meta);
     const wrappedMetaLines = metaLines.flatMap((line) => getWrappedLines(ctx, line, maxWidth));
-    const metaAdvance = wrappedMetaLines.length * lineHeights.meta + 36 * drawScale;
+    const metaAdvance = wrappedMetaLines.length * metaLineHeight * scale + 36 * scale;
 
     setCanvasFont(ctx, 700, sizes.credits);
     const wrappedZhCreditLines = ellipsizeLines(creditSections.zh.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 3);
     const wrappedEnCreditLines = ellipsizeLines(creditSections.en.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 3);
-    const zhCreditAdvance = wrappedZhCreditLines.length ? 24 * drawScale + wrappedZhCreditLines.length * lineHeights.credits : 0;
-    const enCreditAdvance = wrappedEnCreditLines.length ? 24 * drawScale + wrappedEnCreditLines.length * lineHeights.credits : 0;
+    const zhCreditAdvance = wrappedZhCreditLines.length ? 24 * scale + wrappedZhCreditLines.length * lineHeights.credits : 0;
+    const enCreditAdvance = wrappedEnCreditLines.length ? 24 * scale + wrappedEnCreditLines.length * lineHeights.credits : 0;
 
     setCanvasFont(ctx, 800, sizes.titleZh);
     const titleZhLines = ellipsizeLines(getWrappedLines(ctx, movie.titleZh, maxWidth), 2);
@@ -351,14 +321,14 @@ function buildExportLayout(ctx, movie, options = {}) {
       const fixedHeight =
         metaAdvance +
         titleZhLines.length * lineHeights.titleZh +
-        22 * drawScale +
-        38 * drawScale +
-        58 * drawScale +
+        22 * scale +
+        38 * scale +
+        58 * scale +
         titleEnLines.length * lineHeights.titleEn +
-        20 * drawScale +
+        20 * scale +
         zhCreditAdvance +
         enCreditAdvance;
-      const remaining = Math.max(0, bottom - startY - fixedHeight);
+      const remaining = Math.max(0, bottom - 830 - fixedHeight);
       const zhWanted = synopsisZhLines.length * lineHeights.synopsisZh;
       const enWanted = synopsisEnLines.length * lineHeights.synopsisEn;
       const zhShare = zhWanted + enWanted > 0 ? zhWanted / (zhWanted + enWanted) : 0.55;
@@ -371,21 +341,22 @@ function buildExportLayout(ctx, movie, options = {}) {
     const height =
       metaAdvance +
       titleZhLines.length * lineHeights.titleZh +
-      22 * drawScale +
+      22 * scale +
       synopsisZhLines.length * lineHeights.synopsisZh +
       zhCreditAdvance +
-      38 * drawScale +
-      58 * drawScale +
+      38 * scale +
+      58 * scale +
       titleEnLines.length * lineHeights.titleEn +
-      20 * drawScale +
+      20 * scale +
       synopsisEnLines.length * lineHeights.synopsisEn +
       enCreditAdvance;
 
     return {
-      scale: drawScale,
+      scale,
       sizes,
       lineHeights,
       metaLines: wrappedMetaLines,
+      metaLineHeight,
       titleZhLines,
       synopsisZhLines,
       zhCreditLines: wrappedZhCreditLines,
@@ -398,37 +369,37 @@ function buildExportLayout(ctx, movie, options = {}) {
 
   for (let scale = 1; scale >= 0.68; scale -= 0.04) {
     const layout = make(scale, false);
-    if (startY + layout.height <= bottom) return layout;
+    if (830 + layout.height <= bottom) return layout;
   }
 
   return make(0.68, true);
 }
 
-async function makeStoryCanvas() {
+async function makeCanvas() {
   if (!selectedMovie) throw new Error("未揀電影");
 
   const canvas = document.createElement("canvas");
-  canvas.width = EXPORT_WIDTH;
-  canvas.height = EXPORT_HEIGHT;
+  canvas.width = 1080;
+  canvas.height = 1920;
   const ctx = canvas.getContext("2d");
   const layout = buildExportLayout(ctx, selectedMovie);
   const img = await loadImage(selectedMovie.posterUrl);
 
   ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
-  drawContain(ctx, img, 0, 0, EXPORT_WIDTH, 760);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawContain(ctx, img, 0, 0, 1080, 760);
 
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 760, EXPORT_WIDTH, 1160);
+  ctx.fillRect(0, 760, 1080, 1160);
   ctx.fillStyle = "#b82435";
-  ctx.fillRect(0, 760, EXPORT_WIDTH, 12);
+  ctx.fillRect(0, 760, 1080, 12);
 
   const x = 74;
   let y = 830;
 
   ctx.fillStyle = "#b82435";
   setCanvasFont(ctx, 700, layout.sizes.meta);
-  y = drawLines(ctx, layout.metaLines, x, y, layout.lineHeights.meta) + 36 * layout.scale;
+  y = drawLines(ctx, layout.metaLines, x, y, layout.metaLineHeight * layout.scale) + 36 * layout.scale;
 
   ctx.fillStyle = "#171717";
   setCanvasFont(ctx, 800, layout.sizes.titleZh);
@@ -470,6 +441,9 @@ async function makeStoryCanvas() {
     drawLines(ctx, layout.enCreditLines, x, y, layout.lineHeights.credits);
   }
 
+  ctx.fillStyle = "#777";
+  setCanvasFont(ctx, 400, 22);
+  ctx.fillText("Source: cinema.com.hk", x, 1874);
   return canvas;
 }
 
@@ -479,7 +453,7 @@ function canvasToBlob(canvas) {
 
 async function copyImage() {
   setStatus("正在製作圖片...");
-  const canvas = await makeStoryCanvas();
+  const canvas = await makeCanvas();
   const blob = await canvasToBlob(canvas);
   if (!navigator.clipboard || !window.ClipboardItem) {
     downloadBlob(blob);
@@ -498,8 +472,7 @@ async function copyImage() {
 function downloadBlob(blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  const rawName = selectedMovie?.titleEn || selectedMovie?.titleZh || "movie";
-  const name = rawName.replace(/[^\w\u4e00-\u9fff]+/g, "-");
+  const name = (selectedMovie?.titleEn || selectedMovie?.titleZh || "movie").replace(/[^\w\u4e00-\u9fff]+/g, "-");
   a.href = url;
   a.download = `${name}.png`;
   a.click();
@@ -508,7 +481,7 @@ function downloadBlob(blob) {
 
 async function downloadImage() {
   setStatus("正在輸出 PNG...");
-  const canvas = await makeStoryCanvas();
+  const canvas = await makeCanvas();
   const blob = await canvasToBlob(canvas);
   downloadBlob(blob);
   setStatus("PNG 已下載。");
@@ -517,14 +490,5 @@ async function downloadImage() {
 refreshBtn.addEventListener("click", loadMovies);
 copyBtn.addEventListener("click", () => copyImage().catch((error) => setStatus(`複製失敗：${error.message}`)));
 downloadBtn.addEventListener("click", () => downloadImage().catch((error) => setStatus(`下載失敗：${error.message}`)));
-authForm.addEventListener("submit", (event) => {
-  handleAuth(event).catch(() => {
-    authError.textContent = "密碼驗證失敗。";
-  });
-});
 
-if (localStorage.getItem(AUTH_KEY) === "1") {
-  unlockApp();
-} else {
-  passwordInput.focus();
-}
+loadMovies();

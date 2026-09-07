@@ -4,23 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>電影簡介圖片卡</title>
-    <link rel="stylesheet" href="styles.css?v=20260907-storyonly2" />
+    <link rel="stylesheet" href="styles.css?v=20260905-credits4" />
   </head>
-  <body class="is-locked">
-    <section id="authScreen" class="auth-screen" aria-live="polite">
-      <form id="authForm" class="auth-box">
-        <p class="eyebrow">cinema.com.hk</p>
-        <h1>電影簡介圖片卡</h1>
-        <label>
-          密碼
-          <input id="passwordInput" type="password" autocomplete="current-password" />
-        </label>
-        <button type="submit">進入</button>
-        <p id="authError" class="auth-error"></p>
-      </form>
-    </section>
-
-    <main id="appShell" class="app" aria-hidden="true">
+  <body>
+    <main class="app">
       <section class="topbar">
         <div>
           <p class="eyebrow">cinema.com.hk</p>
@@ -62,14 +49,14 @@
               <h3 id="titleEn"></h3>
               <p id="synopsisEn" class="synopsis en"></p>
               <p id="creditsEnLine" class="credits-line en"></p>
+              <p id="sourceLine" class="source-line"></p>
             </div>
           </article>
-
           <p id="status" class="status">準備中...</p>
         </section>
       </section>
     </main>
 
-    <script src="app.js?v=20260907-storyonly2" type="module"></script>
+    <script src="app.js?v=20260905-credits4" type="module"></script>
   </body>
 </html>
