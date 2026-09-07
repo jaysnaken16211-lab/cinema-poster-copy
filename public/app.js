@@ -21,8 +21,7 @@ const creditsEnLine = document.querySelector("#creditsEnLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260906-password1";
-const AUTH_KEY = "cinemaCardAuthorized";
+const APP_VERSION = "20260907-password2";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
 
 const sampleMovies = [
@@ -106,7 +105,6 @@ async function handleAuth(event) {
     return;
   }
 
-  localStorage.setItem(AUTH_KEY, "1");
   passwordInput.value = "";
   unlockApp();
 }
@@ -125,9 +123,10 @@ function buildMetaLines(movie) {
     movie.subtitleZh,
     movie.subtitleEn && movie.subtitleEn !== movie.subtitleZh ? movie.subtitleEn : ""
   ].filter(Boolean).join(" / ");
+  const rating = movie.category ? `級別：${movie.category}` : "";
 
   return [
-    [movie.category, movie.duration, movie.openingDate].filter(Boolean).join("  ·  "),
+    [rating, movie.duration, movie.openingDate].filter(Boolean).join("  ·  "),
     language ? `語言 Language: ${language}` : "",
     subtitle ? `字幕 Subtitles: ${subtitle}` : ""
   ].filter(Boolean);
@@ -541,8 +540,7 @@ authForm.addEventListener("submit", (event) => {
   });
 });
 
-if (localStorage.getItem(AUTH_KEY) === "1") {
-  unlockApp();
-} else {
-  passwordInput.focus();
-}
+try {
+  localStorage.removeItem("cinemaCardAuthorized");
+} catch {}
+passwordInput.focus();
