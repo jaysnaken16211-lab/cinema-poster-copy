@@ -409,7 +409,7 @@ body[data-mode="pause"] .poster-check {
 }
 
 .pause-card {
-  aspect-ratio: 9 / 16;
+  aspect-ratio: 210 / 297;
   display: flex;
   flex-direction: column;
   overflow: hidden;

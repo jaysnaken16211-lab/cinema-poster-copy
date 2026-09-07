@@ -31,7 +31,9 @@ const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-dynamicpause1";
+const APP_VERSION = "20260907-a4print1";
+const EXPORT_WIDTH = 2480;
+const EXPORT_HEIGHT = 3508;
 const AUTH_KEY = "cinemaCardAuthorized";
 const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
 const PAUSE_HIGHLIGHT_COLORS = {
@@ -611,42 +613,44 @@ function setCanvasFont(ctx, weight, size) {
   ctx.font = `${weight} ${Math.round(size)}px Arial, sans-serif`;
 }
 
-function buildExportLayout(ctx, movie) {
-  const maxWidth = 932;
-  const bottom = 1830;
+function buildExportLayout(ctx, movie, options = {}) {
+  const maxWidth = options.maxWidth || 932;
+  const bottom = options.bottom || 1830;
+  const startY = options.startY || 830;
+  const baseScale = options.baseScale || 1;
   const metaLines = buildMetaLines(movie);
-  const metaLineHeight = 34;
   const creditSections = buildCreditSections(movie);
-  const creditLineHeight = 33;
   const synopsisZh = movie.synopsisZh || "暫時未有中文故事簡介。";
   const synopsisEn = movie.synopsisEn || "English synopsis is not available yet.";
 
   function make(scale, clamp) {
+    const drawScale = baseScale * scale;
     const sizes = {
-      meta: 26 * scale,
-      titleZh: 56 * scale,
-      synopsisZh: 32 * scale,
-      titleEn: 38 * scale,
-      synopsisEn: 28 * scale,
-      credits: 24 * scale
+      meta: 26 * drawScale,
+      titleZh: 56 * drawScale,
+      synopsisZh: 32 * drawScale,
+      titleEn: 38 * drawScale,
+      synopsisEn: 28 * drawScale,
+      credits: 24 * drawScale
     };
     const lineHeights = {
-      titleZh: 64 * scale,
-      synopsisZh: 50 * scale,
-      titleEn: 46 * scale,
-      synopsisEn: 40 * scale,
-      credits: creditLineHeight * scale
+      meta: 34 * drawScale,
+      titleZh: 64 * drawScale,
+      synopsisZh: 50 * drawScale,
+      titleEn: 46 * drawScale,
+      synopsisEn: 40 * drawScale,
+      credits: 33 * drawScale
     };
 
     setCanvasFont(ctx, 700, sizes.meta);
     const wrappedMetaLines = metaLines.flatMap((line) => getWrappedLines(ctx, line, maxWidth));
-    const metaAdvance = wrappedMetaLines.length * metaLineHeight * scale + 36 * scale;
+    const metaAdvance = wrappedMetaLines.length * lineHeights.meta + 36 * drawScale;
 
     setCanvasFont(ctx, 700, sizes.credits);
     const wrappedZhCreditLines = ellipsizeLines(creditSections.zh.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 3);
     const wrappedEnCreditLines = ellipsizeLines(creditSections.en.flatMap((line) => getWrappedLines(ctx, line, maxWidth)), 3);
-    const zhCreditAdvance = wrappedZhCreditLines.length ? 24 * scale + wrappedZhCreditLines.length * lineHeights.credits : 0;
-    const enCreditAdvance = wrappedEnCreditLines.length ? 24 * scale + wrappedEnCreditLines.length * lineHeights.credits : 0;
+    const zhCreditAdvance = wrappedZhCreditLines.length ? 24 * drawScale + wrappedZhCreditLines.length * lineHeights.credits : 0;
+    const enCreditAdvance = wrappedEnCreditLines.length ? 24 * drawScale + wrappedEnCreditLines.length * lineHeights.credits : 0;
 
     setCanvasFont(ctx, 800, sizes.titleZh);
     const titleZhLines = ellipsizeLines(getWrappedLines(ctx, movie.titleZh, maxWidth), 2);
@@ -664,14 +668,14 @@ function buildExportLayout(ctx, movie) {
       const fixedHeight =
         metaAdvance +
         titleZhLines.length * lineHeights.titleZh +
-        22 * scale +
-        38 * scale +
-        58 * scale +
+        22 * drawScale +
+        38 * drawScale +
+        58 * drawScale +
         titleEnLines.length * lineHeights.titleEn +
-        20 * scale +
+        20 * drawScale +
         zhCreditAdvance +
         enCreditAdvance;
-      const remaining = Math.max(0, bottom - 830 - fixedHeight);
+      const remaining = Math.max(0, bottom - startY - fixedHeight);
       const zhWanted = synopsisZhLines.length * lineHeights.synopsisZh;
       const enWanted = synopsisEnLines.length * lineHeights.synopsisEn;
       const zhShare = zhWanted + enWanted > 0 ? zhWanted / (zhWanted + enWanted) : 0.55;
@@ -684,22 +688,21 @@ function buildExportLayout(ctx, movie) {
     const height =
       metaAdvance +
       titleZhLines.length * lineHeights.titleZh +
-      22 * scale +
+      22 * drawScale +
       synopsisZhLines.length * lineHeights.synopsisZh +
       zhCreditAdvance +
-      38 * scale +
-      58 * scale +
+      38 * drawScale +
+      58 * drawScale +
       titleEnLines.length * lineHeights.titleEn +
-      20 * scale +
+      20 * drawScale +
       synopsisEnLines.length * lineHeights.synopsisEn +
       enCreditAdvance;
 
     return {
-      scale,
+      scale: drawScale,
       sizes,
       lineHeights,
       metaLines: wrappedMetaLines,
-      metaLineHeight,
       titleZhLines,
       synopsisZhLines,
       zhCreditLines: wrappedZhCreditLines,
@@ -712,7 +715,7 @@ function buildExportLayout(ctx, movie) {
 
   for (let scale = 1; scale >= 0.68; scale -= 0.04) {
     const layout = make(scale, false);
-    if (830 + layout.height <= bottom) return layout;
+    if (startY + layout.height <= bottom) return layout;
   }
 
   return make(0.68, true);
@@ -741,7 +744,8 @@ function getPausePosterLayout(count, width, height) {
 
   for (let cols = 1; cols <= Math.min(count, 6); cols += 1) {
     const rows = Math.ceil(count / cols);
-    const gap = cols >= 5 || rows >= 4 ? 18 : 24;
+    const baseGap = cols >= 5 || rows >= 4 ? 0.022 : 0.03;
+    const gap = Math.round(clamp(Math.min(width, height) * baseGap, 18, 78));
     const cellWidth = (width - (cols - 1) * gap) / cols;
     const cellHeight = (height - (rows - 1) * gap) / rows;
     let posterWidth = Math.min(cellWidth, cellHeight * (2 / 3));
@@ -762,27 +766,28 @@ function getPausePosterLayout(count, width, height) {
 }
 
 function getPauseNoticeLayout(ctx, message, baseColor, posterCount) {
-  const box = { x: 86, y: 64, width: 908 };
-  const textWidth = 790;
-  const minPosterHeight = posterCount <= 4 ? 520 : 420;
-  const bottomMargin = 76;
-  const boxPosterGap = 48;
-  const maxBoxHeight = 1920 - box.y - boxPosterGap - minPosterHeight - bottomMargin;
-  const size = 46;
+  const box = { x: 198, y: 132, width: 2084 };
+  const textWidth = 1810;
+  const minPosterHeight = posterCount <= 4 ? 1180 : 900;
+  const bottomMargin = 140;
+  const boxPosterGap = 110;
+  const maxBoxHeight = EXPORT_HEIGHT - box.y - boxPosterGap - minPosterHeight - bottomMargin;
+  const size = 104;
   const lineHeight = size * 1.28;
 
   setCanvasFont(ctx, 800, size);
   const allLines = getWrappedRichLines(ctx, message, textWidth, baseColor);
-  const maxLines = Math.max(1, Math.floor((maxBoxHeight - 112) / lineHeight));
+  const verticalPadding = 270;
+  const maxLines = Math.max(1, Math.floor((maxBoxHeight - verticalPadding) / lineHeight));
   const lines = allLines.length > maxLines ? ellipsizeRichLines(allLines, maxLines, baseColor) : allLines;
   const textHeight = lines.length * lineHeight;
-  const boxHeight = clamp(textHeight + 150, 410, maxBoxHeight);
+  const boxHeight = clamp(textHeight + verticalPadding, 760, maxBoxHeight);
   const posterAreaY = box.y + boxHeight + boxPosterGap;
 
   return {
     box: { ...box, height: boxHeight },
     text: { size, lineHeight, lines, textHeight, centerY: box.y + boxHeight / 2 },
-    posterArea: { x: 74, y: posterAreaY, width: 932, height: 1920 - posterAreaY - bottomMargin }
+    posterArea: { x: 170, y: posterAreaY, width: EXPORT_WIDTH - 340, height: EXPORT_HEIGHT - posterAreaY - bottomMargin }
   };
 }
 
@@ -830,8 +835,8 @@ async function makePauseCanvas() {
   if (!selectedMovies.length) throw new Error("請先選擇至少一套電影。");
 
   const canvas = document.createElement("canvas");
-  canvas.width = 1080;
-  canvas.height = 1920;
+  canvas.width = EXPORT_WIDTH;
+  canvas.height = EXPORT_HEIGHT;
   const ctx = canvas.getContext("2d");
   const message = pauseMessage.value.trim() || DEFAULT_PAUSE_MESSAGE;
   const posterImages = await Promise.all(selectedMovies.map(async (movie) => {
@@ -845,19 +850,19 @@ async function makePauseCanvas() {
   const pauseLayout = getPauseNoticeLayout(ctx, message, pauseTextColor.value, selectedMovies.length);
 
   ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
 
   const infoBox = pauseLayout.box;
-  roundedRectPath(ctx, infoBox.x, infoBox.y, infoBox.width, infoBox.height, 92);
+  roundedRectPath(ctx, infoBox.x, infoBox.y, infoBox.width, infoBox.height, 168);
   ctx.fillStyle = "rgba(255, 255, 255, 0.42)";
   ctx.fill();
   ctx.strokeStyle = "#2b2b2b";
-  ctx.lineWidth = 3;
+  ctx.lineWidth = 7;
   ctx.stroke();
 
   const topText = pauseLayout.text;
   setCanvasFont(ctx, 800, topText.size);
-  drawRichLines(ctx, topText.lines, 540, topText.centerY - topText.textHeight / 2 + topText.size, topText.lineHeight);
+  drawRichLines(ctx, topText.lines, EXPORT_WIDTH / 2, topText.centerY - topText.textHeight / 2 + topText.size, topText.lineHeight);
   ctx.textAlign = "left";
 
   const posterArea = pauseLayout.posterArea;
@@ -882,27 +887,35 @@ async function makeStoryCanvas() {
   if (!selectedMovie) throw new Error("未揀電影");
 
   const canvas = document.createElement("canvas");
-  canvas.width = 1080;
-  canvas.height = 1920;
+  canvas.width = EXPORT_WIDTH;
+  canvas.height = EXPORT_HEIGHT;
   const ctx = canvas.getContext("2d");
-  const layout = buildExportLayout(ctx, selectedMovie);
+  const x = 170;
+  const posterHeight = 1280;
+  const redLineHeight = 28;
+  const contentTop = posterHeight + 160;
+  const layout = buildExportLayout(ctx, selectedMovie, {
+    maxWidth: EXPORT_WIDTH - x * 2,
+    bottom: EXPORT_HEIGHT - 160,
+    startY: contentTop,
+    baseScale: 2.12
+  });
   const img = await loadImage(selectedMovie.posterUrl);
 
   ctx.fillStyle = "#f8f4ed";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawContain(ctx, img, 0, 0, 1080, 760);
+  ctx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
+  drawContain(ctx, img, 0, 0, EXPORT_WIDTH, posterHeight);
 
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 760, 1080, 1160);
+  ctx.fillRect(0, posterHeight, EXPORT_WIDTH, EXPORT_HEIGHT - posterHeight);
   ctx.fillStyle = "#b82435";
-  ctx.fillRect(0, 760, 1080, 12);
+  ctx.fillRect(0, posterHeight, EXPORT_WIDTH, redLineHeight);
 
-  const x = 74;
-  let y = 830;
+  let y = contentTop;
 
   ctx.fillStyle = "#b82435";
   setCanvasFont(ctx, 700, layout.sizes.meta);
-  y = drawLines(ctx, layout.metaLines, x, y, layout.metaLineHeight * layout.scale) + 36 * layout.scale;
+  y = drawLines(ctx, layout.metaLines, x, y, layout.lineHeights.meta) + 36 * layout.scale;
 
   ctx.fillStyle = "#171717";
   setCanvasFont(ctx, 800, layout.sizes.titleZh);
@@ -925,7 +938,7 @@ async function makeStoryCanvas() {
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(x, y);
-  ctx.lineTo(1006, y);
+  ctx.lineTo(EXPORT_WIDTH - x, y);
   ctx.stroke();
   y += 58 * layout.scale;
 
