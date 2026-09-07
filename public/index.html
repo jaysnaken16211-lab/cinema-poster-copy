@@ -4,10 +4,23 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>電影簡介圖片卡</title>
-    <link rel="stylesheet" href="styles.css?v=20260905-credits4" />
+    <link rel="stylesheet" href="styles.css?v=20260906-password1" />
   </head>
-  <body>
-    <main class="app">
+  <body class="is-locked">
+    <section id="authScreen" class="auth-screen" aria-live="polite">
+      <form id="authForm" class="auth-box">
+        <p class="eyebrow">cinema.com.hk</p>
+        <h1>電影簡介圖片卡</h1>
+        <label>
+          密碼
+          <input id="passwordInput" type="password" autocomplete="current-password" />
+        </label>
+        <button type="submit">進入</button>
+        <p id="authError" class="auth-error"></p>
+      </form>
+    </section>
+
+    <main id="appShell" class="app" aria-hidden="true">
       <section class="topbar">
         <div>
           <p class="eyebrow">cinema.com.hk</p>
@@ -57,6 +70,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=20260905-credits4" type="module"></script>
+    <script src="app.js?v=20260906-password1" type="module"></script>
   </body>
 </html>

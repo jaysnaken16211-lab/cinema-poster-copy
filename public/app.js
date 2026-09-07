@@ -1,3 +1,8 @@
+const appShell = document.querySelector("#appShell");
+const authScreen = document.querySelector("#authScreen");
+const authForm = document.querySelector("#authForm");
+const passwordInput = document.querySelector("#passwordInput");
+const authError = document.querySelector("#authError");
 const posterGrid = document.querySelector("#posterGrid");
 const countLabel = document.querySelector("#countLabel");
 const refreshBtn = document.querySelector("#refreshBtn");
@@ -16,7 +21,9 @@ const creditsEnLine = document.querySelector("#creditsEnLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260905-credits4";
+const APP_VERSION = "20260906-password1";
+const AUTH_KEY = "cinemaCardAuthorized";
+const PASSWORD_HASH = "e7a03d87e87b1a33a06c9d62d24d37f41e218b13f856e66a65abd70de854b1f5";
 
 const sampleMovies = [
   {
@@ -61,9 +68,47 @@ const sampleMovies = [
 
 let movies = [];
 let selectedMovie = null;
+let hasLoadedMovies = false;
 
 function setStatus(message) {
   statusEl.textContent = message;
+}
+
+async function sha256Hex(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function unlockApp() {
+  document.body.classList.remove("is-locked");
+  appShell.removeAttribute("aria-hidden");
+  authScreen.hidden = true;
+  if (!hasLoadedMovies) {
+    hasLoadedMovies = true;
+    loadMovies();
+  }
+}
+
+async function handleAuth(event) {
+  event.preventDefault();
+  authError.textContent = "";
+
+  if (!globalThis.crypto?.subtle) {
+    authError.textContent = "此瀏覽器未支援密碼驗證。";
+    return;
+  }
+
+  const hash = await sha256Hex(passwordInput.value);
+  if (hash !== PASSWORD_HASH) {
+    authError.textContent = "密碼不正確。";
+    passwordInput.select();
+    return;
+  }
+
+  localStorage.setItem(AUTH_KEY, "1");
+  passwordInput.value = "";
+  unlockApp();
 }
 
 function truncate(text, max) {
@@ -490,5 +535,14 @@ async function downloadImage() {
 refreshBtn.addEventListener("click", loadMovies);
 copyBtn.addEventListener("click", () => copyImage().catch((error) => setStatus(`複製失敗：${error.message}`)));
 downloadBtn.addEventListener("click", () => downloadImage().catch((error) => setStatus(`下載失敗：${error.message}`)));
+authForm.addEventListener("submit", (event) => {
+  handleAuth(event).catch(() => {
+    authError.textContent = "密碼驗證失敗。";
+  });
+});
 
-loadMovies();
+if (localStorage.getItem(AUTH_KEY) === "1") {
+  unlockApp();
+} else {
+  passwordInput.focus();
+}
