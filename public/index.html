@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>電影簡介圖片卡</title>
-    <link rel="stylesheet" href="styles.css?v=20260907-hires1" />
+    <link rel="stylesheet" href="styles.css?v=20260907-layout1" />
   </head>
   <body class="is-locked">
     <section id="authScreen" class="auth-screen" aria-live="polite">
@@ -44,6 +44,17 @@
           <div class="panel-head">
             <h2>圖片預覽</h2>
             <div class="actions">
+              <fieldset class="layout-choice" aria-label="排版">
+                <legend>排版</legend>
+                <label>
+                  <input name="cardLayout" type="radio" value="poster" checked />
+                  有海報
+                </label>
+                <label>
+                  <input name="cardLayout" type="radio" value="text" />
+                  純文字
+                </label>
+              </fieldset>
               <button id="copyBtn">複製圖片</button>
               <button id="downloadBtn">下載 PNG</button>
             </div>
@@ -70,6 +81,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=20260907-hires1" type="module"></script>
+    <script src="app.js?v=20260907-layout1" type="module"></script>
   </body>
 </html>

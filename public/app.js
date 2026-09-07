@@ -9,6 +9,8 @@ const refreshBtn = document.querySelector("#refreshBtn");
 const copyBtn = document.querySelector("#copyBtn");
 const downloadBtn = document.querySelector("#downloadBtn");
 const statusEl = document.querySelector("#status");
+const layoutInputs = document.querySelectorAll('input[name="cardLayout"]');
+const card = document.querySelector("#card");
 
 const cardPoster = document.querySelector("#cardPoster");
 const cardMeta = document.querySelector("#cardMeta");
@@ -21,7 +23,7 @@ const creditsEnLine = document.querySelector("#creditsEnLine");
 const sourceLine = document.querySelector("#sourceLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-hires1";
+const APP_VERSION = "20260907-layout1";
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
 const EXPORT_SCALE = 2;
@@ -71,6 +73,7 @@ const sampleMovies = [
 let movies = [];
 let selectedMovie = null;
 let hasLoadedMovies = false;
+let cardLayout = "poster";
 
 function setStatus(message) {
   statusEl.textContent = message;
@@ -167,6 +170,11 @@ function selectMovie(movie) {
   document.querySelectorAll(".poster-button").forEach((button) => {
     button.classList.toggle("is-active", String(button.dataset.id) === String(movie.id));
   });
+}
+
+function setCardLayout(value) {
+  cardLayout = value === "text" ? "text" : "poster";
+  card.classList.toggle("is-text-only", cardLayout === "text");
 }
 
 function renderMovies(list) {
@@ -315,7 +323,7 @@ function setCanvasFont(ctx, weight, size) {
   ctx.font = `${weight} ${Math.round(size)}px Arial, sans-serif`;
 }
 
-function buildExportLayout(ctx, movie) {
+function buildExportLayout(ctx, movie, topY) {
   const maxWidth = 932;
   const bottom = 1830;
   const metaLines = buildMetaLines(movie);
@@ -375,7 +383,7 @@ function buildExportLayout(ctx, movie) {
         20 * scale +
         zhCreditAdvance +
         enCreditAdvance;
-      const remaining = Math.max(0, bottom - 830 - fixedHeight);
+      const remaining = Math.max(0, bottom - topY - fixedHeight);
       const zhWanted = synopsisZhLines.length * lineHeights.synopsisZh;
       const enWanted = synopsisEnLines.length * lineHeights.synopsisEn;
       const zhShare = zhWanted + enWanted > 0 ? zhWanted / (zhWanted + enWanted) : 0.55;
@@ -416,7 +424,7 @@ function buildExportLayout(ctx, movie) {
 
   for (let scale = 1; scale >= 0.68; scale -= 0.04) {
     const layout = make(scale, false);
-    if (830 + layout.height <= bottom) return layout;
+    if (topY + layout.height <= bottom) return layout;
   }
 
   return make(0.68, true);
@@ -430,20 +438,24 @@ async function makeCanvas() {
   canvas.height = CARD_HEIGHT * EXPORT_SCALE;
   const ctx = canvas.getContext("2d");
   ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
-  const layout = buildExportLayout(ctx, selectedMovie);
-  const img = await loadImage(selectedMovie.posterUrl);
+  const isTextOnly = cardLayout === "text";
+  const topY = isTextOnly ? 124 : 830;
+  const layout = buildExportLayout(ctx, selectedMovie, topY);
 
-  ctx.fillStyle = "#f8f4ed";
+  ctx.fillStyle = isTextOnly ? "#ffffff" : "#f8f4ed";
   ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
-  drawContain(ctx, img, 0, 0, CARD_WIDTH, 760);
 
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 760, CARD_WIDTH, 1160);
-  ctx.fillStyle = "#b82435";
-  ctx.fillRect(0, 760, CARD_WIDTH, 12);
+  if (!isTextOnly) {
+    const img = await loadImage(selectedMovie.posterUrl);
+    drawContain(ctx, img, 0, 0, CARD_WIDTH, 760);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 760, CARD_WIDTH, 1160);
+    ctx.fillStyle = "#b82435";
+    ctx.fillRect(0, 760, CARD_WIDTH, 12);
+  }
 
   const x = 74;
-  let y = 830;
+  let y = topY;
 
   ctx.fillStyle = "#b82435";
   setCanvasFont(ctx, 700, layout.sizes.meta);
@@ -538,6 +550,9 @@ async function downloadImage() {
 refreshBtn.addEventListener("click", loadMovies);
 copyBtn.addEventListener("click", () => copyImage().catch((error) => setStatus(`複製失敗：${error.message}`)));
 downloadBtn.addEventListener("click", () => downloadImage().catch((error) => setStatus(`下載失敗：${error.message}`)));
+layoutInputs.forEach((input) => {
+  input.addEventListener("change", () => setCardLayout(input.value));
+});
 authForm.addEventListener("submit", (event) => {
   handleAuth(event).catch(() => {
     authError.textContent = "密碼驗證失敗。";
@@ -547,4 +562,5 @@ authForm.addEventListener("submit", (event) => {
 try {
   localStorage.removeItem("cinemaCardAuthorized");
 } catch {}
+setCardLayout(cardLayout);
 passwordInput.focus();
