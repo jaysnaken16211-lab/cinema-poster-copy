@@ -6,6 +6,7 @@ const authError = document.querySelector("#authError");
 const posterGrid = document.querySelector("#posterGrid");
 const countLabel = document.querySelector("#countLabel");
 const refreshBtn = document.querySelector("#refreshBtn");
+const dataUpdatedAt = document.querySelector("#dataUpdatedAt");
 const copyBtn = document.querySelector("#copyBtn");
 const downloadBtn = document.querySelector("#downloadBtn");
 const statusEl = document.querySelector("#status");
@@ -22,7 +23,7 @@ const creditsZhLine = document.querySelector("#creditsZhLine");
 const creditsEnLine = document.querySelector("#creditsEnLine");
 
 const CINEMA_ID = "5";
-const APP_VERSION = "20260907-oak1";
+const APP_VERSION = "20260928-refresh1";
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1920;
 const EXPORT_SCALE = 2;
@@ -207,10 +208,18 @@ async function loadMovies() {
 
   try {
     const payload = await fetchMoviePayload();
+    const updatedAt = new Date(payload.fetchedAt);
+    dataUpdatedAt.textContent = Number.isNaN(updatedAt.getTime())
+      ? "電影資料更新時間：未提供"
+      : `電影資料更新時間：${new Intl.DateTimeFormat("zh-HK", {
+        timeZone: "Asia/Hong_Kong", year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+      }).format(updatedAt)}（香港時間）`;
     movies = payload.movies?.length ? payload.movies : sampleMovies;
     renderMovies(movies);
     setStatus(payload.movies?.length ? `已更新：${new Date(payload.fetchedAt).toLocaleString()}` : "未讀到即時資料，已顯示 sample。");
   } catch (error) {
+    if (!movies.length) dataUpdatedAt.textContent = "電影資料更新時間：讀取失敗";
     movies = sampleMovies;
     renderMovies(movies);
     setStatus(`即時抓取暫時失敗，已顯示 sample：${error.message}`);
@@ -220,7 +229,7 @@ async function loadMovies() {
 }
 
 async function fetchMoviePayload() {
-  const staticResponse = await fetch(`data/movies-${CINEMA_ID}.json?v=${APP_VERSION}`, { cache: "no-store" });
+  const staticResponse = await fetch(`data/movies-${CINEMA_ID}.json?v=${APP_VERSION}&t=${Date.now()}`, { cache: "no-store" });
   if (staticResponse.ok) return staticResponse.json();
 
   const apiResponse = await fetch(`api/movies`);

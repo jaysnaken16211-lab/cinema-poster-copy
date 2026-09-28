@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>電影簡介圖片卡</title>
-    <link rel="stylesheet" href="styles.css?v=20260907-oak1" />
+    <link rel="stylesheet" href="styles.css?v=20260928-refresh1" />
   </head>
   <body class="is-locked">
     <section id="authScreen" class="auth-screen" aria-live="polite">
@@ -27,7 +27,8 @@
           <h1>電影簡介圖片卡</h1>
         </div>
         <div class="controls">
-          <button id="refreshBtn">刷新電影</button>
+          <p id="dataUpdatedAt" class="data-updated-at" aria-live="polite">電影資料更新時間：讀取中</p>
+          <button id="refreshBtn" type="button">重新載入電影</button>
         </div>
       </section>
 
@@ -80,6 +81,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=20260907-oak1" type="module"></script>
+    <script src="app.js?v=20260928-refresh1" type="module"></script>
   </body>
 </html>

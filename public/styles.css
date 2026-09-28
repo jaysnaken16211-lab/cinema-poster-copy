@@ -98,6 +98,14 @@ h1 {
   justify-content: end;
 }
 
+.data-updated-at {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: right;
+}
+
 label {
   display: grid;
   gap: 6px;
@@ -385,6 +393,10 @@ body.is-locked .app {
   .controls {
     justify-content: start;
     margin-top: 16px;
+  }
+
+  .data-updated-at {
+    text-align: left;
   }
 
   .poster-panel {
