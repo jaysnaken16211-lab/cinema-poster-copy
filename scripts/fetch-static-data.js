@@ -25,6 +25,7 @@ async function downloadPoster(file) {
   if (!response.ok) throw new Error(`Poster ${file} returned ${response.status}`);
 
   const type = response.headers.get("content-type")?.split(";")[0] || "";
+  if (!mimeToExt.has(type)) throw new Error(`Poster ${file} is not an image: ${type}`);
   const fallbackExt = extname(file) || mimeToExt.get(type) || ".jpg";
   const safeFile = /^[a-z0-9_-]+\.(jpe?g|png|webp)$/i.test(file) ? file : `${file}${fallbackExt}`;
   const buffer = Buffer.from(await response.arrayBuffer());
@@ -38,11 +39,14 @@ async function updateCinema(cinemaID) {
   const payload = {
     source: `https://www.cinema.com.hk/hk/cinema/${cinemaID}`,
     fetchedAt: new Date().toISOString(),
+    sourceMovieIds: movies.flatMap(movie => movie.sourceMovieIds),
     cinemaID,
     movies
   };
   await writeFile(join(dataDir, `movies-${cinemaID}.json`), `${JSON.stringify(payload, null, 2)}\n`);
   console.log(`Updated cinema ${cinemaID}: ${movies.length} movies`);
+  console.log(`Verified source movie IDs: ${payload.sourceMovieIds.join(", ")}`);
+  console.log(movies.map(movie => `${movie.id}: ${movie.titleZh}`).join("\n"));
 }
 
 await mkdir(posterDir, { recursive: true });

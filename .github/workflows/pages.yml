@@ -34,6 +34,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Test cinema parser
+        run: node --test tests/cinema-data.test.js
+
       - name: Fetch cinema data
         run: npm run fetch:data
         env:
