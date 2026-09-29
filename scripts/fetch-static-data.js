@@ -25,10 +25,13 @@ async function downloadPoster(file) {
   if (!response.ok) throw new Error(`Poster ${file} returned ${response.status}`);
 
   const type = response.headers.get("content-type")?.split(";")[0] || "";
-  if (!mimeToExt.has(type)) throw new Error(`Poster ${file} is not an image: ${type}`);
   const fallbackExt = extname(file) || mimeToExt.get(type) || ".jpg";
   const safeFile = /^[a-z0-9_-]+\.(jpe?g|png|webp)$/i.test(file) ? file : `${file}${fallbackExt}`;
   const buffer = Buffer.from(await response.arrayBuffer());
+  const isImage = buffer.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))
+    || buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+    || (buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP");
+  if (!isImage) throw new Error(`Poster ${file} is not a supported image`);
   await writeFile(join(posterDir, safeFile), buffer);
 }
 
